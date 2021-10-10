@@ -2,11 +2,16 @@
 
 using namespace voltage;
 
-void Renderer::drawPoint(uint16_t x, uint16_t y) { dacWrite(x, y); }
+void Renderer::drawPoint(const Vector2 &point) { dacWrite(transform(point.x), transform(point.y)); }
 
 // Draw a line with Bresenham's line algorithm:
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-void Renderer::drawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+void Renderer::drawLine(const Vector2 &a, const Vector2 &b) {
+  int32_t x0 = transform(a.x);
+  int32_t y0 = transform(a.y);
+  int32_t x1 = transform(b.x);
+  int32_t y1 = transform(b.y);
+
   if (abs(y1 - y0) < abs(x1 - x0)) {
     if (x0 > x1) {
       drawLineLow(x1, y1, x0, y0);
@@ -66,6 +71,10 @@ void Renderer::drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
       D = D + 2 * dx;
     }
   }
+}
+
+uint32_t Renderer::transform(float value) {
+  return (uint32_t)(value * scaleValueHalf + scaleValueHalf);
 }
 
 // Low-level analog write implementation for Teensy 3.6 is copy-pasted here from the core library:

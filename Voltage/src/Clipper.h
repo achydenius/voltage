@@ -9,7 +9,7 @@ struct Viewport {
   float left, right, top, bottom;
 };
 
-int clipTest(float p, float q, float& u1, float& u2) {
+static int clipTest(float p, float q, float& u1, float& u2) {
   float r;
   bool value = true;
 
@@ -36,7 +36,7 @@ int clipTest(float p, float q, float& u1, float& u2) {
 
 // Clip a line with Liang–Barsky algorithm
 // Implementation idea from: https://www.geeksforgeeks.org/liang-barsky-algorithm/
-bool clipLine(Vector2& a, Vector2& b, Viewport& viewport) {
+inline bool clipLine(Vector2& a, Vector2& b, Viewport& viewport) {
   float u1 = 0;
   float u2 = 1.0;
   float dx = b.x - a.x;
@@ -55,6 +55,7 @@ bool clipLine(Vector2& a, Vector2& b, Viewport& viewport) {
             a.x += u1 * dx;
             a.y += u1 * dy;
           }
+          return true;
         }
       }
     }

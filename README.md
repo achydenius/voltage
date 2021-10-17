@@ -12,21 +12,29 @@ The project depends on header-only math library from [raylib](https://www.raylib
 
 ## Code example
 
-Drawing a rotating line:
+Drawing two rotating lines:
 
 ```cpp
 #include <Voltage.h>
 
-voltage::Renderer renderer(12);
+voltage::Engine engine(10);
+
+voltage::Line createLine(float angle, float length) {
+  return {
+    { cosf(angle) * length, sinf(angle) * length },
+    { cosf(PI + angle) * length, sinf(PI + angle) * length }
+  };
+}
 
 void setup() {}
 
 float phase = 0;
 void loop() {
-  renderer.drawLine(
-    { cosf(phase) * 0.75, sinf(phase) * 0.75 },
-    { cosf(PI + phase) * 0.75, sinf(PI + phase) * 0.75 }
-  );
-  phase += 0.01;
+  engine.clear();
+  engine.addLine(createLine(phase, 0.75));
+  engine.addLine(createLine(phase + HALF_PI, 0.75));
+  engine.render();
+
+  phase -= 0.001;
 }
 ```

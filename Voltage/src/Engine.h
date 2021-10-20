@@ -28,7 +28,7 @@ class Buffer {
 
 class Engine {
   Renderer renderer;
-  Viewport viewport = {-0.5, 0.5, 0.5, -0.5};
+  Viewport viewport = {-1.0, 1.0, 0.75, -0.75};
   Vector2 blankingPoint = {1.0, 1.0};
   Buffer<Line> lines;
   Buffer<Vector2> points;
@@ -45,6 +45,7 @@ class Engine {
   void clear();
   void addLine(const Line& line);
   void addPoint(const Vector2& point);
+  void addViewport();
   void render();
 };
 

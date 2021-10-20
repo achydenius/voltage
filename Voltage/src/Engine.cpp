@@ -27,6 +27,20 @@ void Engine::addPoint(const Vector2& point) {
   }
 }
 
+void Engine::addViewport() {
+  Vector2 points[] = {
+      {viewport.left, viewport.top},
+      {viewport.right, viewport.top},
+      {viewport.right, viewport.bottom},
+      {viewport.left, viewport.bottom},
+  };
+
+  for (uint32_t i = 0; i < 4; i++) {
+    Line line = {points[i], points[(i + 1) % 4]};
+    addLine(line);
+  }
+}
+
 void Engine::render() {
   for (uint32_t i = 0; i < lines.count(); i++) {
     renderer.drawLine(lines[i].a, lines[i].b);

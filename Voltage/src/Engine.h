@@ -28,21 +28,20 @@ class Buffer {
 
 class Engine {
   Renderer renderer;
-  Viewport viewport;
+  Viewport viewport = {-0.5, 0.5, 0.5, -0.5};
+  Vector2 blankingPoint = {1.0, 1.0};
   Buffer<Line> lines;
   Buffer<Vector2> points;
 
-  const Viewport defaultViewport = {-0.5, 0.5, 0.5, -0.5};
   static const uint32_t defaultMaxLines = 1000;
   static const uint32_t defaultMaxPoints = 1000;
 
  public:
   Engine(uint8_t resolutionBits, uint32_t maxLines = defaultMaxLines,
          uint32_t maxPoints = defaultMaxPoints)
-      : renderer(resolutionBits), lines(maxLines), points(maxPoints) {
-    viewport = defaultViewport;
-  }
+      : renderer(resolutionBits), lines(maxLines), points(maxPoints) {}
   void setViewport(const Viewport viewport);
+  void setBlankingPoint(const Vector2 blankingPoint);
   void clear();
   void addLine(const Line& line);
   void addPoint(const Vector2& point);

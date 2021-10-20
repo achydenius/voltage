@@ -4,6 +4,8 @@ using namespace voltage;
 
 void Engine::setViewport(const Viewport viewport) { this->viewport = viewport; }
 
+void Engine::setBlankingPoint(const Vector2 blankingPoint) { this->blankingPoint = blankingPoint; }
+
 void Engine::clear() {
   lines.reset();
   points.reset();
@@ -33,4 +35,7 @@ void Engine::render() {
   for (uint32_t i = 0; i < points.count(); i++) {
     renderer.drawPoint(points[i]);
   }
+
+  // Move beam to blanking point (i.e. outside the screen) when finished drawing
+  renderer.drawPoint(blankingPoint);
 }

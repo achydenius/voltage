@@ -2,6 +2,7 @@
 #define VOLTAGE_ENGINE_H_
 
 #include "Clipper.h"
+#include "Object.h"
 #include "Renderer.h"
 
 namespace voltage {
@@ -47,6 +48,7 @@ class Engine {
   void addPoint(const Vector2& point);
   void addViewport();
   void render();
+  void render(const Object& object);
 };
 
 }  // namespace voltage

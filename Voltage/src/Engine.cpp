@@ -53,3 +53,36 @@ void Engine::render() {
   // Move beam to blanking point (i.e. outside the screen) when finished drawing
   renderer.drawPoint(blankingPoint);
 }
+
+void Engine::render(const Object& object) {
+  // Transform
+  Matrix scale = MatrixScale(object.scaling.x, object.scaling.y, object.scaling.z);
+  Vector3 rotation = {object.rotation.x, object.rotation.y, object.rotation.z};
+  Matrix rotate = MatrixRotateXYZ(rotation);
+  Matrix translate =
+      MatrixTranslate(object.translation.x, object.translation.y, object.translation.z);
+  Matrix project = MatrixPerspective(M_PI_4, 1.0, 0.01, 100.0);
+  Matrix matrix = MatrixMultiply(MatrixMultiply(MatrixMultiply(scale, rotate), translate), project);
+
+  for (uint32_t i = 0; i < object.mesh->vertexCount; i++) {
+    Vector3 transformed = Vector3Transform(object.mesh->vertices[i], matrix);
+    object.projected[i].x = transformed.x / transformed.z;
+    object.projected[i].y = transformed.y / transformed.z;
+  }
+
+  // Clip
+  clear();
+  for (uint32_t i = 0; i < object.mesh->edgeCount; i++) {
+    Line line = {object.projected[object.mesh->edges[i].aIndex],
+                 object.projected[object.mesh->edges[i].bIndex]};
+    addLine(line);
+  }
+
+  // Render
+  for (uint32_t i = 0; i < lines.count(); i++) {
+    renderer.drawLine(lines[i].a, lines[i].b);
+  }
+
+  // Move beam to blanking point (i.e. outside the screen) when finished drawing
+  renderer.drawPoint(blankingPoint);
+}

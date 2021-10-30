@@ -25,11 +25,7 @@ class Object {
   void setScaling(float scale) { setVector(scaling, scale, scale, scale); }
 
  private:
-  void setVector(Vector3& vector, float x, float y, float z) {
-    vector.x = x;
-    vector.y = y;
-    vector.z = z;
-  }
+  void setVector(Vector3& vector, float x, float y, float z) { vector = (Vector3){x, y, z}; }
 };
 
 }  // namespace voltage

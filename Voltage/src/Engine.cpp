@@ -2,9 +2,9 @@
 
 using namespace voltage;
 
-void Engine::setViewport(const Viewport viewport) { this->viewport = viewport; }
+void Engine::setViewport(const Viewport& viewport) { this->viewport = viewport; }
 
-void Engine::setBlankingPoint(const Vector2 blankingPoint) { this->blankingPoint = blankingPoint; }
+void Engine::setBlankingPoint(const Vector2& blankingPoint) { this->blankingPoint = blankingPoint; }
 
 void Engine::clear() {
   lines.reset();
@@ -15,8 +15,7 @@ void Engine::addLine(const Line& line) {
   Vector2 a = line.a;
   Vector2 b = line.b;
   if (clipLine(a, b, viewport)) {
-    Line clipped = {a, b};
-    lines.add(clipped);
+    lines.add((Line){a, b});
   }
 }
 
@@ -36,8 +35,7 @@ void Engine::addViewport() {
   };
 
   for (uint32_t i = 0; i < 4; i++) {
-    Line line = {points[i], points[(i + 1) % 4]};
-    addLine(line);
+    addLine((Line){points[i], points[(i + 1) % 4]});
   }
 }
 
@@ -54,15 +52,15 @@ void Engine::render() {
   renderer.drawPoint(blankingPoint);
 }
 
-void Engine::render(const Object& object) {
+void Engine::render(const Object& object, Camera& camera) {
   // Transform
   Matrix scale = MatrixScale(object.scaling.x, object.scaling.y, object.scaling.z);
-  Vector3 rotation = {object.rotation.x, object.rotation.y, object.rotation.z};
-  Matrix rotate = MatrixRotateXYZ(rotation);
+  Matrix rotate =
+      MatrixRotateXYZ((Vector3){object.rotation.x, object.rotation.y, object.rotation.z});
   Matrix translate =
       MatrixTranslate(object.translation.x, object.translation.y, object.translation.z);
-  Matrix project = MatrixPerspective(M_PI_4, 1.0, 0.01, 100.0);
-  Matrix matrix = MatrixMultiply(MatrixMultiply(MatrixMultiply(scale, rotate), translate), project);
+  Matrix matrix =
+      MatrixMultiply(MatrixMultiply(MatrixMultiply(scale, rotate), translate), camera.getMatrix());
 
   for (uint32_t i = 0; i < object.mesh->vertexCount; i++) {
     Vector3 transformed = Vector3Transform(object.mesh->vertices[i], matrix);
@@ -71,11 +69,9 @@ void Engine::render(const Object& object) {
   }
 
   // Clip
-  clear();
   for (uint32_t i = 0; i < object.mesh->edgeCount; i++) {
-    Line line = {object.projected[object.mesh->edges[i].aIndex],
-                 object.projected[object.mesh->edges[i].bIndex]};
-    addLine(line);
+    addLine((Line){object.projected[object.mesh->edges[i].aIndex],
+                   object.projected[object.mesh->edges[i].bIndex]});
   }
 
   // Render

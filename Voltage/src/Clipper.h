@@ -36,7 +36,7 @@ static int clipTest(float p, float q, float& u1, float& u2) {
 
 // Clip a line with Liang–Barsky algorithm
 // Implementation idea from: https://www.geeksforgeeks.org/liang-barsky-algorithm/
-inline bool clipLine(Vector2& a, Vector2& b, Viewport& viewport) {
+inline bool clipLine(Vector2& a, Vector2& b, const Viewport& viewport) {
   float u1 = 0;
   float u2 = 1.0;
   float dx = b.x - a.x;

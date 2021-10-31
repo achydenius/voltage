@@ -1,6 +1,6 @@
 # Voltage
 
-An oscillographic programming library for Arduino-compatible microcontrollers. Development is currently being done with [Teensy 3.6](https://www.pjrc.com/store/teensy36.html).
+An oscillographics programming library for Arduino-compatible microcontrollers. Development is currently being done with [Teensy 3.6](https://www.pjrc.com/store/teensy36.html).
 
 The project depends on [raylib's](https://www.raylib.com) header-only math library.
 
@@ -46,7 +46,7 @@ void loop() {
 
 voltage::Engine engine(10);
 voltage::Mesh *mesh = voltage::MeshBuilder::createCube(1.0);
-voltage::Object object(mesh);
+voltage::Array<voltage::Object*> objects({ new voltage::Object(mesh) });
 voltage::FreeCamera camera;
 
 void setup() {
@@ -56,8 +56,9 @@ void setup() {
 float phase = 0;
 void loop() {
   engine.clear();
-  object.setRotation(phase, phase, 0);
-  engine.render(object, camera);
+  objects[0]->setRotation(phase, phase, 0);
+  engine.addObjects(objects, camera);
+  engine.render();
   phase += 0.001;
 }
 ```

@@ -1,6 +1,7 @@
 #ifndef VOLTAGE_ENGINE_H_
 #define VOLTAGE_ENGINE_H_
 
+#include "Array.h"
 #include "Camera.h"
 #include "Clipper.h"
 #include "Object.h"
@@ -10,22 +11,6 @@ namespace voltage {
 
 struct Line {
   Vector2 a, b;
-};
-
-template <typename T>
-class Buffer {
-  T* data;
-  size_t size;
-  uint32_t index;
-
- public:
-  Buffer(size_t size) : size(size) { data = new T[size]; }
-  ~Buffer() { delete data; };
-
-  T& operator[](uint32_t index) { return data[index]; }
-  uint32_t count() { return index; }
-  void reset() { index = 0; }
-  void add(T d) { data[index++] = d; }
 };
 
 class Engine {
@@ -47,8 +32,8 @@ class Engine {
   void addLine(const Line& line);
   void addPoint(const Vector2& point);
   void addViewport();
+  void addObjects(const Array<Object*>& objects, Camera& camera);
   void render();
-  void render(const Object& object, Camera& camera);
 };
 
 }  // namespace voltage

@@ -13,19 +13,18 @@ class Object {
   Vector2* projected;
 
   Object(Mesh* m) : mesh(m) {
-    setScaling(1.0);
     projected = new Vector2[m->vertexCount];
+    setRotation(0, 0, 0);
+    setTranslation(0, 0, 0);
+    setScaling(1.0);
   };
 
   ~Object() { delete projected; }
 
-  void setRotation(float x, float y, float z) { setVector(rotation, x, y, z); }
-  void setTranslation(float x, float y, float z) { setVector(translation, x, y, z); }
-  void setScaling(float x, float y, float z) { setVector(scaling, x, y, z); }
-  void setScaling(float scale) { setVector(scaling, scale, scale, scale); }
-
- private:
-  void setVector(Vector3& vector, float x, float y, float z) { vector = (Vector3){x, y, z}; }
+  void setRotation(float x, float y, float z) { rotation = (Vector3){x, y, z}; }
+  void setTranslation(float x, float y, float z) { translation = (Vector3){x, y, z}; }
+  void setScaling(float x, float y, float z) { scaling = (Vector3){x, y, z}; }
+  void setScaling(float scale) { scaling = (Vector3){scale, scale, scale}; }
 };
 
 }  // namespace voltage

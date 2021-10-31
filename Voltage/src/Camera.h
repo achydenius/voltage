@@ -11,17 +11,22 @@ class Camera {
   Matrix matrix;
 
  public:
-  Camera() : fov(M_PI_4), aspect(1.0), near(0.01), far(100.0) {}
   Camera(float fov, float aspect, float near, float far)
-      : fov(fov), aspect(aspect), near(near), far(far) {}
+      : fov(fov), aspect(aspect), near(near), far(far) {
+    matrix = MatrixIdentity();
+  }
+  Camera() : Camera(M_PI_4, 1.0, 0.01, 100.0) {}
   virtual Matrix& getMatrix() = 0;
 };
 
 class FreeCamera : public Camera {
-  Vector3 rotation, translation;
-  Matrix matrix;
+  Vector3 rotation = (Vector3){0, 0, 0};
+  Vector3 translation = (Vector3){0, 0, 0};
 
  public:
+  FreeCamera(float fov, float aspect, float near, float far) : Camera(fov, aspect, near, far) {}
+  FreeCamera() : Camera() {}
+
   Matrix& getMatrix() {
     Matrix rotate = MatrixRotateXYZ((Vector3){-rotation.x, -rotation.y, -rotation.z});
     Matrix translate = MatrixTranslate(-translation.x, -translation.y, -translation.z);
@@ -35,13 +40,11 @@ class FreeCamera : public Camera {
 };
 
 class LookAtCamera : public Camera {
-  Vector3 eye, target, up;
+  Vector3 eye = (Vector3){0, 0, 0};
+  Vector3 target = (Vector3){0, 0, 0};
+  Vector3 up = (Vector3){0, 1.0, 0};
 
  public:
-  LookAtCamera() : up((Vector3){0, 1.0, 0}){};
-  LookAtCamera(const Vector3& up, float fov, float aspect, float near, float far)
-      : Camera(fov, aspect, near, far), up(up) {}
-
   Matrix& getMatrix() {
     matrix =
         MatrixMultiply(MatrixLookAt(eye, target, up), MatrixPerspective(fov, aspect, near, far));

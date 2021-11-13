@@ -11,11 +11,11 @@ class Camera {
   Matrix matrix;
 
  public:
-  Camera(float fov, float aspect, float near, float far)
+  Camera(float fov = M_PI_4, float aspect = 1.0, float near = 0.01, float far = 100.0)
       : fov(fov), aspect(aspect), near(near), far(far) {
     matrix = MatrixIdentity();
   }
-  Camera() : Camera(M_PI_4, 1.0, 0.01, 100.0) {}
+
   virtual Matrix& getMatrix() = 0;
 };
 

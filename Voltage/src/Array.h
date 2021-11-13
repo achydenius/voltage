@@ -15,12 +15,12 @@ class Array {
   const size_t capacity;
 
  public:
-  Array(size_t capacity) : capacity(capacity) { elements = new T[capacity]; }
-  Array(std::initializer_list<T> il) : Array(il.size()) {
+  Array(const size_t capacity) : capacity(capacity) { elements = new T[capacity]; }
+  Array(const std::initializer_list<T> il) : Array(il.size()) {
     std::copy(il.begin(), il.end(), elements);
   }
 
-  T& operator[](uint32_t index) const { return elements[index]; }
+  T& operator[](const int index) const { return elements[index]; }
   size_t getCapacity() const { return capacity; }
 };
 
@@ -29,12 +29,13 @@ class Buffer : public Array<T> {
   uint32_t index;
 
  public:
-  Buffer(size_t capacity) : Array<T>(capacity) {}
+  Buffer(const size_t capacity) : Array<T>(capacity) {}
 
-  T& operator[](uint32_t index) const { return Array<T>::elements[index]; }
+  T& operator[](const int index) const { return Array<T>::elements[index]; }
   uint32_t getSize() const { return index; }
   void clear() { index = 0; }
   void push(const T& element) { Array<T>::elements[index++] = element; }
+  T& getLast() { return Array<T>::elements[index - 1]; }
 };
 
 }  // namespace voltage

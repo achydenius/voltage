@@ -11,11 +11,11 @@ void Engine::clear() {
   points.clear();
 }
 
-void Engine::addLine(const Line& line) {
+void Engine::addLine(const Line2D& line) {
   Vector2 a = line.a;
   Vector2 b = line.b;
   if (clipLine(a, b, viewport)) {
-    lines.push((Line){a, b});
+    lines.push((Line2D){a, b});
   }
 }
 
@@ -35,14 +35,14 @@ void Engine::addViewport() {
   };
 
   for (uint32_t i = 0; i < 4; i++) {
-    addLine((Line){points[i], points[(i + 1) % 4]});
+    addLine((Line2D){points[i], points[(i + 1) % 4]});
   }
 }
 
 void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
   Matrix view = camera.getMatrix();
 
-  // Transform
+  // Process objects
   for (uint32_t i = 0; i < objects.getCapacity(); i++) {
     Object& object = *objects[i];
 
@@ -56,19 +56,54 @@ void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
     // Transform to clip space
     for (uint32_t i = 0; i < object.mesh->vertexCount; i++) {
       Vector3& vertex = object.mesh->vertices[i];
-      object.transformed[i] =
-          Vector4Transform((Vector4){vertex.x, vertex.y, vertex.z, 1.0}, matrix);
+      processedVertices[i] =
+          (Vertex){Vector4Transform((Vector4){vertex.x, vertex.y, vertex.z, 1.0}, matrix), false};
     }
 
-    // Clip against near plane and project
-    // TODO: Project each vertex only once
-    for (uint32_t i = 0; i < object.mesh->edgeCount; i++) {
-      Vector4 a = object.transformed[object.mesh->edges[i].aIndex];
-      Vector4 b = object.transformed[object.mesh->edges[i].bIndex];
+    // Clip lines against near plane
+    clippedVertices.clear();
+    processedLines.clear();
 
-      if (clipLineNear(a, b) != Outside) {
-        addLine((Line){(Vector2){a.x / a.w, a.y / a.w}, (Vector2){b.x / b.w, b.y / b.w}});
+    for (uint32_t i = 0; i < object.mesh->edgeCount; i++) {
+      Vertex* ap = &processedVertices[object.mesh->edges[i].aIndex];
+      Vertex* bp = &processedVertices[object.mesh->edges[i].bIndex];
+      Vector4 a = ap->vector;
+      Vector4 b = bp->vector;
+
+      ClipResult clipResult = clipLineNear(a, b);
+
+      switch (clipResult) {
+        case Outside:
+          continue;
+        case Inside:
+          break;
+        case AClipped:
+          clippedVertices.push((Vertex){a, false});
+          ap = &clippedVertices.getLast();
+          break;
+        case BClipped:
+          clippedVertices.push((Vertex){b, false});
+          bp = &clippedVertices.getLast();
+          break;
       }
+      processedLines.push((Line<Vertex*>){ap, bp});
+    }
+
+    // Project vertices
+    for (uint32_t i = 0; i < processedLines.getSize(); i++) {
+      Vertex* a = processedLines[i].a;
+      Vertex* b = processedLines[i].b;
+      if (!a->isProjected) {
+        a->vector.x /= a->vector.w;
+        a->vector.y /= a->vector.w;
+        a->isProjected = true;
+      }
+      if (!b->isProjected) {
+        b->vector.x /= b->vector.w;
+        b->vector.y /= b->vector.w;
+        b->isProjected = true;
+      }
+      addLine((Line2D){(Vector2){a->vector.x, a->vector.y}, (Vector2){b->vector.x, b->vector.y}});
     }
   }
 }

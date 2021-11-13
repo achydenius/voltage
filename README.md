@@ -19,7 +19,7 @@ The project depends on [raylib's](https://www.raylib.com) header-only math libra
 
 voltage::Engine engine(10);
 
-voltage::Line createLine(float angle, float length) {
+voltage::Line2D createLine(float angle, float length) {
   return {
     { cosf(angle) * length, sinf(angle) * length },
     { cosf(PI + angle) * length, sinf(PI + angle) * length }
@@ -55,8 +55,9 @@ void setup() {
 
 float phase = 0;
 void loop() {
-  engine.clear();
   objects[0]->setRotation(phase, phase, 0);
+
+  engine.clear();
   engine.addObjects(objects, camera);
   engine.render();
   phase += 0.001;

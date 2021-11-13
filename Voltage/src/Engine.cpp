@@ -53,16 +53,22 @@ void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
         MatrixTranslate(object.translation.x, object.translation.y, object.translation.z);
     Matrix matrix = MatrixMultiply(MatrixMultiply(MatrixMultiply(scale, rotate), translate), view);
 
+    // Transform to clip space
     for (uint32_t i = 0; i < object.mesh->vertexCount; i++) {
-      Vector3 transformed = Vector3Transform(object.mesh->vertices[i], matrix);
-      object.projected[i].x = transformed.x / transformed.z;
-      object.projected[i].y = transformed.y / transformed.z;
+      Vector3& vertex = object.mesh->vertices[i];
+      object.transformed[i] =
+          Vector4Transform((Vector4){vertex.x, vertex.y, vertex.z, 1.0}, matrix);
     }
 
-    // Clip
+    // Clip against near plane and project
+    // TODO: Project each vertex only once
     for (uint32_t i = 0; i < object.mesh->edgeCount; i++) {
-      addLine((Line){object.projected[object.mesh->edges[i].aIndex],
-                     object.projected[object.mesh->edges[i].bIndex]});
+      Vector4 a = object.transformed[object.mesh->edges[i].aIndex];
+      Vector4 b = object.transformed[object.mesh->edges[i].bIndex];
+
+      if (clipLineNear(a, b) != Outside) {
+        addLine((Line){(Vector2){a.x / a.w, a.y / a.w}, (Vector2){b.x / b.w, b.y / b.w}});
+      }
     }
   }
 }

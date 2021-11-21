@@ -17,7 +17,9 @@ void Engine::clear() {
   points.clear();
 }
 
-void Engine::addLine(const Line2D& line) {
+void Engine::addLine(const Line2D& line) { addLine(line, viewport); }
+
+void Engine::addLine(const Line2D& line, const Viewport& viewport) {
   Vector2 a = line.a;
   Vector2 b = line.b;
   if (clipLine(a, b, viewport)) {
@@ -25,14 +27,18 @@ void Engine::addLine(const Line2D& line) {
   }
 }
 
-void Engine::addPoint(const Vector2& point) {
+void Engine::addPoint(const Vector2& point) { addPoint(point, viewport); }
+
+void Engine::addPoint(const Vector2& point, const Viewport& viewport) {
   if (point.x >= viewport.left && point.x < viewport.right && point.y >= viewport.bottom &&
       point.y < viewport.top) {
     points.push(point);
   }
 }
 
-void Engine::addViewport() {
+void Engine::addViewport() { addViewport(viewport); }
+
+void Engine::addViewport(const Viewport& viewport) {
   Vector2 points[] = {
       {viewport.left, viewport.top},
       {viewport.right, viewport.top},
@@ -45,7 +51,19 @@ void Engine::addViewport() {
   }
 }
 
+void Engine::addObject(Object* object, Camera& camera) { addObject(object, camera, viewport); }
+
+void Engine::addObject(Object* object, Camera& camera, const Viewport& viewport) {
+  static Array<Object*> objects(1);
+  objects[0] = object;
+  addObjects(objects, camera, viewport);
+}
+
 void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
+  addObjects(objects, camera, viewport);
+}
+
+void Engine::addObjects(const Array<Object*>& objects, Camera& camera, const Viewport& viewport) {
   TIMER_CREATE(transform);
   TIMER_CREATE(nearClip);
 
@@ -117,7 +135,8 @@ void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
         b->vector.y /= b->vector.w;
         b->isProjected = true;
       }
-      addLine((Line2D){(Vector2){a->vector.x, a->vector.y}, (Vector2){b->vector.x, b->vector.y}});
+      addLine((Line2D){(Vector2){a->vector.x, a->vector.y}, (Vector2){b->vector.x, b->vector.y}},
+              viewport);
     }
     TIMER_STOP(transform);
   }

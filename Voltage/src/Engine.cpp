@@ -1,5 +1,11 @@
 #include "Engine.h"
 
+// Uncomment for enabling performance profiling
+#define VOLTAGE_PROFILE_SAMPLES 100
+#define VOLTAGE_PROFILE
+
+#include "Timer.h"
+
 using namespace voltage;
 
 void Engine::setViewport(const Viewport& viewport) { this->viewport = viewport; }
@@ -40,12 +46,16 @@ void Engine::addViewport() {
 }
 
 void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
+  TIMER_CREATE(transform);
+  TIMER_CREATE(nearClip);
+
   Matrix view = camera.getMatrix();
 
   // Process objects
   for (uint32_t i = 0; i < objects.getCapacity(); i++) {
     Object& object = *objects[i];
 
+    TIMER_START(transform);
     Matrix scale = MatrixScale(object.scaling.x, object.scaling.y, object.scaling.z);
     Matrix rotate =
         MatrixRotateXYZ((Vector3){object.rotation.x, object.rotation.y, object.rotation.z});
@@ -59,11 +69,13 @@ void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
       processedVertices[i] =
           (Vertex){Vector4Transform((Vector4){vertex.x, vertex.y, vertex.z, 1.0}, matrix), false};
     }
+    TIMER_STOP(transform);
 
     // Clip lines against near plane
     clippedVertices.clear();
     processedLines.clear();
 
+    TIMER_START(nearClip);
     for (uint32_t i = 0; i < object.mesh->edgeCount; i++) {
       Vertex* ap = &processedVertices[object.mesh->edges[i].aIndex];
       Vertex* bp = &processedVertices[object.mesh->edges[i].bIndex];
@@ -88,7 +100,9 @@ void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
       }
       processedLines.push((Line<Vertex*>){ap, bp});
     }
+    TIMER_STOP(nearClip);
 
+    TIMER_START(transform);
     // Project vertices
     for (uint32_t i = 0; i < processedLines.getSize(); i++) {
       Vertex* a = processedLines[i].a;
@@ -105,10 +119,19 @@ void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
       }
       addLine((Line2D){(Vector2){a->vector.x, a->vector.y}, (Vector2){b->vector.x, b->vector.y}});
     }
+    TIMER_STOP(transform);
   }
+
+  TIMER_SAVE(transform);
+  TIMER_SAVE(nearClip);
+
+  TIMER_PRINT(transform);
+  TIMER_PRINT(nearClip);
 }
 
 void Engine::render() {
+  TIMER_CREATE(render);
+  TIMER_START(render);
   for (uint32_t i = 0; i < lines.getSize(); i++) {
     renderer.drawLine(lines[i].a, lines[i].b);
   }
@@ -116,6 +139,10 @@ void Engine::render() {
   for (uint32_t i = 0; i < points.getSize(); i++) {
     renderer.drawPoint(points[i]);
   }
+  TIMER_STOP(render);
+  TIMER_SAVE(render);
+
+  TIMER_PRINT(render);
 
   // Move beam to blanking point (i.e. outside the screen) when finished drawing
   renderer.drawPoint(blankingPoint);

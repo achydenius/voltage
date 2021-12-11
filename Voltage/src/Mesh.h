@@ -11,6 +11,10 @@ struct Edge {
   uint32_t aIndex, bIndex;
 };
 
+struct Triangle {
+  uint32_t aIndex, bIndex, cIndex;
+};
+
 class Mesh {
  public:
   uint32_t vertexCount;
@@ -25,6 +29,7 @@ class Mesh {
 namespace MeshBuilder {
 Mesh* createCube(float size);
 Mesh* createPlane(float size);
+Mesh* createIcosahedron(float size);
 };  // namespace MeshBuilder
 
 };  // namespace voltage

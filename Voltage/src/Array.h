@@ -29,7 +29,7 @@ class Buffer : public Array<T> {
   uint32_t index;
 
  public:
-  Buffer(const size_t capacity) : Array<T>(capacity) {}
+  Buffer(const size_t capacity) : Array<T>(capacity), index(0) {}
 
   T& operator[](const int index) const { return Array<T>::elements[index]; }
   uint32_t getSize() const { return index; }

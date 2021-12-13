@@ -22,14 +22,17 @@ class Mesh {
   Vector3* vertices;
   Edge* edges;
 
-  Mesh(Vector3* vertices, uint32_t vertexCount, Edge* edges, uint32_t edgeCount);
+  Mesh(const Vector3* vertices, const uint32_t vertexCount, const Edge* edges,
+       const uint32_t edgeCount);
   ~Mesh();
+
+  void scale(const float value);
 };
 
 namespace MeshBuilder {
-Mesh* createCube(float size);
-Mesh* createPlane(float size);
-Mesh* createIcosahedron(float size);
+Mesh* createCube(const float size);
+Mesh* createPlane(const float size);
+Mesh* createIcosphere(const float size);
 };  // namespace MeshBuilder
 
 };  // namespace voltage

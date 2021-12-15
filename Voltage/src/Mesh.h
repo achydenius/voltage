@@ -32,7 +32,7 @@ class Mesh {
 namespace MeshBuilder {
 Mesh* createCube(const float size);
 Mesh* createPlane(const float size);
-Mesh* createIcosphere(const float size);
+Mesh* createIcosphere(const float size, const uint32_t iterations = 1);
 };  // namespace MeshBuilder
 
 };  // namespace voltage

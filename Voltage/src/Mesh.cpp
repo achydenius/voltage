@@ -102,11 +102,10 @@ uint32_t getMidpoint(const uint32_t aIndex, const uint32_t bIndex, Buffer<Vector
 
 // Implementation idea from:
 // http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
-Mesh* createIcosphere(float size) {
+Mesh* createIcosphere(const float size, const uint32_t iterations) {
   const uint32_t icosahedronVertexCount = 12;
   const uint32_t icosahedronTriangleCount = 20;
 
-  const uint32_t iterations = 1;
   const uint32_t vertexCount = 10 * pow(4, iterations) + 2;
   const uint32_t triangleCount = vertexCount * 2 - 4;
   const uint32_t edgeCount = triangleCount * 3 / 2;
@@ -148,36 +147,47 @@ Mesh* createIcosphere(float size) {
   };
 
   Buffer<Vector3> vertexBuffer(vertexCount);
-  Buffer<Triangle> triangleBuffer(triangleCount);
+  Buffer<Triangle> sourceTriangles(triangleCount);
+  Buffer<Triangle> targetTriangles(triangleCount);
   Buffer<EdgeMidpoint> midpointBuffer(edgeCount);
 
-  // TODO: Replace this with a parameterized constructor?
   for (uint32_t i = 0; i < icosahedronVertexCount; i++) {
     vertexBuffer.push(Vector3Normalize(icosahedronVertices[i]));
   }
 
   for (uint32_t i = 0; i < icosahedronTriangleCount; i++) {
-    Triangle& triangle = icosahedronTriangles[i];
+    sourceTriangles.push(icosahedronTriangles[i]);
+  }
 
-    uint32_t aIndex = getMidpoint(triangle.aIndex, triangle.bIndex, vertexBuffer, midpointBuffer);
-    uint32_t bIndex = getMidpoint(triangle.bIndex, triangle.cIndex, vertexBuffer, midpointBuffer);
-    uint32_t cIndex = getMidpoint(triangle.cIndex, triangle.aIndex, vertexBuffer, midpointBuffer);
+  for (uint32_t i = 0; i < iterations; i++) {
+    targetTriangles.clear();
 
-    triangleBuffer.push((Triangle){triangle.aIndex, aIndex, cIndex});
-    triangleBuffer.push((Triangle){triangle.bIndex, bIndex, aIndex});
-    triangleBuffer.push((Triangle){triangle.cIndex, cIndex, bIndex});
-    triangleBuffer.push((Triangle){aIndex, bIndex, cIndex});
+    for (uint32_t i = 0; i < sourceTriangles.getSize(); i++) {
+      Triangle& triangle = sourceTriangles[i];
+
+      uint32_t aIndex = getMidpoint(triangle.aIndex, triangle.bIndex, vertexBuffer, midpointBuffer);
+      uint32_t bIndex = getMidpoint(triangle.bIndex, triangle.cIndex, vertexBuffer, midpointBuffer);
+      uint32_t cIndex = getMidpoint(triangle.cIndex, triangle.aIndex, vertexBuffer, midpointBuffer);
+
+      targetTriangles.push((Triangle){triangle.aIndex, aIndex, cIndex});
+      targetTriangles.push((Triangle){triangle.bIndex, bIndex, aIndex});
+      targetTriangles.push((Triangle){triangle.cIndex, cIndex, bIndex});
+      targetTriangles.push((Triangle){aIndex, bIndex, cIndex});
+    }
+
+    sourceTriangles.clear();
+    for (uint32_t i = 0; i < targetTriangles.getSize(); i++) {
+      sourceTriangles.push(targetTriangles[i]);
+    }
   }
 
   Buffer<Edge> edgeBuffer(edgeCount);
-  for (uint32_t i = 0; i < triangleBuffer.getSize(); i++) {
-    addEdge((Edge){triangleBuffer[i].aIndex, triangleBuffer[i].bIndex}, edgeBuffer);
-    addEdge((Edge){triangleBuffer[i].bIndex, triangleBuffer[i].cIndex}, edgeBuffer);
-    addEdge((Edge){triangleBuffer[i].cIndex, triangleBuffer[i].aIndex}, edgeBuffer);
+  for (uint32_t i = 0; i < targetTriangles.getSize(); i++) {
+    addEdge((Edge){targetTriangles[i].aIndex, targetTriangles[i].bIndex}, edgeBuffer);
+    addEdge((Edge){targetTriangles[i].bIndex, targetTriangles[i].cIndex}, edgeBuffer);
+    addEdge((Edge){targetTriangles[i].cIndex, targetTriangles[i].aIndex}, edgeBuffer);
   }
 
-  // TODO: Add conversion method to Buffer class
-  // or add a constructor to Mesh that takes a buffer/array as a parameter?
   Edge edges[edgeBuffer.getSize()];
   for (uint32_t i = 0; i < edgeBuffer.getSize(); i++) {
     edges[i] = (Edge){edgeBuffer[i].aIndex, edgeBuffer[i].bIndex};

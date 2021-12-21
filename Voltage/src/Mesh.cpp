@@ -52,13 +52,16 @@ Mesh* createPlane(float size) {
   return new Mesh(vertices, 4, edges, 4);
 }
 
+bool edgeEquals(const Edge& edge, const uint32_t aIndex, const uint32_t bIndex) {
+  return (edge.aIndex == aIndex && edge.bIndex == bIndex) ||
+         (edge.aIndex == bIndex && edge.bIndex == aIndex);
+}
+
 void addEdge(const Edge& edge, Buffer<Edge>& buffer) {
   bool exists = false;
   for (uint32_t i = 0; i < buffer.getSize(); i++) {
-    if ((edge.aIndex == buffer[i].aIndex && edge.bIndex == buffer[i].bIndex) ||
-        (edge.aIndex == buffer[i].bIndex && edge.bIndex == buffer[i].aIndex)) {
+    if (edgeEquals(edge, buffer[i].aIndex, buffer[i].bIndex)) {
       exists = true;
-      break;
     }
   }
 
@@ -67,18 +70,21 @@ void addEdge(const Edge& edge, Buffer<Edge>& buffer) {
   }
 }
 
-struct EdgeMidpoint {
-  uint32_t aIndex, bIndex;
+struct EdgeMidpoint : public Edge {
   uint32_t index;
+
+  EdgeMidpoint() { aIndex = bIndex = index = 0; }
+  EdgeMidpoint(uint32_t ai, uint32_t bi, uint32_t index) : index(index) {
+    aIndex = ai;
+    bIndex = bi;
+  }
 };
 
 uint32_t getMidpoint(const uint32_t aIndex, const uint32_t bIndex, Buffer<Vector3>& vertexBuffer,
                      Buffer<EdgeMidpoint>& midpointBuffer) {
-  // TODO: Refactor this to a function and also use it in addEdge?
   uint32_t* midpointIndex = 0;
   for (uint32_t i = 0; i < midpointBuffer.getSize(); i++) {
-    if ((aIndex == midpointBuffer[i].aIndex && bIndex == midpointBuffer[i].bIndex) ||
-        (aIndex == midpointBuffer[i].bIndex && bIndex == midpointBuffer[i].aIndex)) {
+    if (edgeEquals(midpointBuffer[i], aIndex, bIndex)) {
       midpointIndex = &midpointBuffer[i].index;
       break;
     }

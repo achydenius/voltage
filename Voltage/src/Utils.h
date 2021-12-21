@@ -3,30 +3,24 @@
 
 #include "raymath.h"
 
-// Supplementary Vector4 functions for raymath
+// Supplementary functions for raymath
 
 namespace voltage {
 
-inline Vector4 Vector4Transform(Vector4 v, Matrix matrix) {
-  Vector4 result;
-
-  result.x = matrix.m0 * v.x + matrix.m4 * v.y + matrix.m8 * v.z + matrix.m12 * v.w;
-  result.y = matrix.m1 * v.x + matrix.m5 * v.y + matrix.m9 * v.z + matrix.m13 * v.w;
-  result.z = matrix.m2 * v.x + matrix.m6 * v.y + matrix.m10 * v.z + matrix.m14 * v.w;
-  result.w = matrix.m3 * v.x + matrix.m7 * v.y + matrix.m11 * v.z + matrix.m15 * v.w;
-
-  return result;
+inline Vector4 Vector4Transform(const Vector4 &v, const Matrix &matrix) {
+  return (Vector4){matrix.m0 * v.x + matrix.m4 * v.y + matrix.m8 * v.z + matrix.m12 * v.w,
+                   matrix.m1 * v.x + matrix.m5 * v.y + matrix.m9 * v.z + matrix.m13 * v.w,
+                   matrix.m2 * v.x + matrix.m6 * v.y + matrix.m10 * v.z + matrix.m14 * v.w,
+                   matrix.m3 * v.x + matrix.m7 * v.y + matrix.m11 * v.z + matrix.m15 * v.w};
 }
 
-inline Vector4 Vector4Lerp(Vector4 a, Vector4 b, float amount) {
-  Vector4 result;
+inline Vector4 Vector4Lerp(const Vector4 &a, const Vector4 &b, const float amount) {
+  return (Vector4){a.x + amount * (b.x - a.x), a.y + amount * (b.y - a.y),
+                   a.z + amount * (b.z - a.z), a.w + amount * (b.w - a.w)};
+}
 
-  result.x = a.x + amount * (b.x - a.x);
-  result.y = a.y + amount * (b.y - a.y);
-  result.z = a.z + amount * (b.z - a.z);
-  result.w = a.w + amount * (b.w - a.w);
-
-  return result;
+inline Vector3 Vector3Midpoint(const Vector3 &a, const Vector3 &b) {
+  return (Vector3){(a.x + b.x) / 2.0, (a.y + b.y) / 2.0, (a.z + b.z) / 2.0};
 }
 
 }  // namespace voltage

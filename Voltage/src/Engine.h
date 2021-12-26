@@ -47,9 +47,15 @@ class Engine {
   void setBlankingPoint(const Vector2& blankingPoint);
   void clear();
   void addLine(const Line2D& line);
+  void addLine(const Line2D& line, const Viewport& viewport);
   void addPoint(const Vector2& point);
+  void addPoint(const Vector2& point, const Viewport& viewport);
   void addViewport();
+  void addViewport(const Viewport& viewport);
+  void addObject(Object* object, Camera& camera);
+  void addObject(Object* object, Camera& camera, const Viewport& viewport);
   void addObjects(const Array<Object*>& objects, Camera& camera);
+  void addObjects(const Array<Object*>& objects, Camera& camera, const Viewport& viewport);
   void render();
 };
 

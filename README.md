@@ -4,7 +4,7 @@ An oscillographics programming library for Arduino-compatible microcontrollers. 
 
 Development is currently being done with [Teensy 3.6](https://www.pjrc.com/store/teensy36.html). The project depends on [raylib's](https://www.raylib.com) header-only math library.
 
-![An oscilloscope running a Voltage example](https://raw.githubusercontent.com/achydenius/voltage/examples/three-cubes.jpg)
+![An oscilloscope running a Voltage example](https://raw.githubusercontent.com/achydenius/voltage/main/three-cubes.jpg)
 
 ## Setting up
 

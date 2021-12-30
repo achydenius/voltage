@@ -1,5 +1,5 @@
-#ifndef VOLTAGE_RENDERER_H_
-#define VOLTAGE_RENDERER_H_
+#ifndef VOLTAGE_RASTERIZER_H_
+#define VOLTAGE_RASTERIZER_H_
 
 // Use Teensy 3.6 core library definitions
 #ifndef __MK66FX1M0__
@@ -11,16 +11,16 @@
 
 namespace voltage {
 
-class Renderer {
+class Rasterizer {
   static const uint8_t maxResolutionBits = 12;
   const uint8_t resolutionBits;
   const uint8_t scaleBits;
   const uint32_t scaleValueHalf;
 
  public:
-  Renderer(uint8_t resolutionBits)
+  Rasterizer(uint8_t resolutionBits)
       : resolutionBits(resolutionBits),
-        scaleBits(Renderer::maxResolutionBits - resolutionBits),
+        scaleBits(Rasterizer::maxResolutionBits - resolutionBits),
         scaleValueHalf(pow(2, resolutionBits - 1) - 1) {}
 
   void drawPoint(const Vector2& point) const;

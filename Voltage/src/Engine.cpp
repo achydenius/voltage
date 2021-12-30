@@ -17,9 +17,7 @@ void Engine::clear() {
   points.clear();
 }
 
-void Engine::addLine(const Line2D& line) { addLine(line, viewport); }
-
-void Engine::addLine(const Line2D& line, const Viewport& viewport) {
+void Engine::add(const Line2D& line) {
   Vector2 a = line.a;
   Vector2 b = line.b;
   if (clipLine(a, b, viewport)) {
@@ -27,43 +25,20 @@ void Engine::addLine(const Line2D& line, const Viewport& viewport) {
   }
 }
 
-void Engine::addPoint(const Vector2& point) { addPoint(point, viewport); }
-
-void Engine::addPoint(const Vector2& point, const Viewport& viewport) {
+void Engine::add(const Vector2& point) {
   if (point.x >= viewport.left && point.x < viewport.right && point.y >= viewport.bottom &&
       point.y < viewport.top) {
     points.push(point);
   }
 }
 
-void Engine::addViewport() { addViewport(viewport); }
-
-void Engine::addViewport(const Viewport& viewport) {
-  Vector2 points[] = {
-      {viewport.left, viewport.top},
-      {viewport.right, viewport.top},
-      {viewport.right, viewport.bottom},
-      {viewport.left, viewport.bottom},
-  };
-
-  for (uint32_t i = 0; i < 4; i++) {
-    addLine((Line2D){points[i], points[(i + 1) % 4]});
-  }
-}
-
-void Engine::addObject(Object* object, Camera& camera) { addObject(object, camera, viewport); }
-
-void Engine::addObject(Object* object, Camera& camera, const Viewport& viewport) {
+void Engine::add(Object* object, Camera& camera) {
   static Array<Object*> objects(1);
   objects[0] = object;
-  addObjects(objects, camera, viewport);
+  add(objects, camera);
 }
 
-void Engine::addObjects(const Array<Object*>& objects, Camera& camera) {
-  addObjects(objects, camera, viewport);
-}
-
-void Engine::addObjects(const Array<Object*>& objects, Camera& camera, const Viewport& viewport) {
+void Engine::add(const Array<Object*>& objects, Camera& camera) {
   TIMER_CREATE(transform);
   TIMER_CREATE(nearClip);
 
@@ -135,8 +110,7 @@ void Engine::addObjects(const Array<Object*>& objects, Camera& camera, const Vie
         b->vector.y /= b->vector.w;
         b->isProjected = true;
       }
-      addLine((Line2D){(Vector2){a->vector.x, a->vector.y}, (Vector2){b->vector.x, b->vector.y}},
-              viewport);
+      add((Line2D){(Vector2){a->vector.x, a->vector.y}, (Vector2){b->vector.x, b->vector.y}});
     }
     TIMER_STOP(transform);
   }
@@ -148,15 +122,28 @@ void Engine::addObjects(const Array<Object*>& objects, Camera& camera, const Vie
   TIMER_PRINT(nearClip);
 }
 
+void Engine::addViewport() {
+  Vector2 points[] = {
+      {viewport.left, viewport.top},
+      {viewport.right, viewport.top},
+      {viewport.right, viewport.bottom},
+      {viewport.left, viewport.bottom},
+  };
+
+  for (uint32_t i = 0; i < 4; i++) {
+    add((Line2D){points[i], points[(i + 1) % 4]});
+  }
+}
+
 void Engine::render() {
   TIMER_CREATE(render);
   TIMER_START(render);
   for (uint32_t i = 0; i < lines.getSize(); i++) {
-    renderer.drawLine(lines[i].a, lines[i].b);
+    rasterizer.drawLine(lines[i].a, lines[i].b);
   }
 
   for (uint32_t i = 0; i < points.getSize(); i++) {
-    renderer.drawPoint(points[i]);
+    rasterizer.drawPoint(points[i]);
   }
   TIMER_STOP(render);
   TIMER_SAVE(render);
@@ -164,5 +151,5 @@ void Engine::render() {
   TIMER_PRINT(render);
 
   // Move beam to blanking point (i.e. outside the screen) when finished drawing
-  renderer.drawPoint(blankingPoint);
+  rasterizer.drawPoint(blankingPoint);
 }

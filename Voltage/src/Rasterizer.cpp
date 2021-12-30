@@ -1,14 +1,14 @@
-#include "Renderer.h"
+#include "Rasterizer.h"
 
 using namespace voltage;
 
-void Renderer::drawPoint(const Vector2 &point) const {
+void Rasterizer::drawPoint(const Vector2 &point) const {
   dacWrite(transform(point.x), transform(point.y));
 }
 
 // Draw a line with Bresenham's line algorithm:
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-void Renderer::drawLine(const Vector2 &a, const Vector2 &b) const {
+void Rasterizer::drawLine(const Vector2 &a, const Vector2 &b) const {
   int32_t x0 = transform(a.x);
   int32_t y0 = transform(a.y);
   int32_t x1 = transform(b.x);
@@ -29,7 +29,7 @@ void Renderer::drawLine(const Vector2 &a, const Vector2 &b) const {
   }
 }
 
-void Renderer::drawLineLow(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const {
+void Rasterizer::drawLineLow(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const {
   int32_t dx = x1 - x0;
   int32_t dy = y1 - y0;
   int32_t yi = 1;
@@ -52,7 +52,7 @@ void Renderer::drawLineLow(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const
   }
 }
 
-void Renderer::drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const {
+void Rasterizer::drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const {
   int32_t dx = x1 - x0;
   int32_t dy = y1 - y0;
   int32_t xi = 1;
@@ -75,7 +75,7 @@ void Renderer::drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) cons
   }
 }
 
-uint32_t Renderer::transform(float value) const {
+uint32_t Rasterizer::transform(float value) const {
   return (uint32_t)(value * scaleValueHalf + scaleValueHalf);
 }
 
@@ -83,7 +83,7 @@ uint32_t Renderer::transform(float value) const {
 // https://github.com/PaulStoffregen/cores/blob/1.54/teensy3/analog.c#L520-L564
 // This improves performance dramatically as the function calls in rendering loop are bypassed.
 typedef int16_t __attribute__((__may_alias__)) aliased_int16_t;
-void Renderer::dacWrite(uint32_t x, uint32_t y) const {
+void Rasterizer::dacWrite(uint32_t x, uint32_t y) const {
   SIM_SCGC2 |= SIM_SCGC2_DAC0;
   DAC0_C0 = DAC_C0_DACEN | DAC_C0_DACRFS;  // 3.3V VDDA is DACREF_2
   *(volatile aliased_int16_t *)&(DAC0_DAT0L) = x << scaleBits;

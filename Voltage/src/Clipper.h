@@ -1,8 +1,8 @@
 #ifndef VOLTAGE_CLIPPER_H_
 #define VOLTAGE_CLIPPER_H_
 
-#include "Utils.h"
 #include "raymath.h"
+#include "utils.h"
 
 namespace voltage {
 

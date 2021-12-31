@@ -53,10 +53,12 @@ void loop() {
 ```cpp
 #include <Voltage.h>
 
-voltage::Engine engine(10);
-voltage::Mesh *mesh = voltage::MeshBuilder::createCube(1.0);
-voltage::Object *object = new voltage::Object(mesh);
-voltage::FreeCamera camera;
+using namespace voltage;
+
+Engine engine(10);
+Mesh *mesh = MeshBuilder::createCube(1.0);
+Object *object = new Object(mesh);
+FreeCamera camera;
 
 void setup() {
   camera.setTranslation(0, 0, 5.0);

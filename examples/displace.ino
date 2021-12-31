@@ -32,7 +32,7 @@ void loop() {
   object->setRotation(0, 0, phase);
 
   engine.clear();
-  engine.addObject(object, camera);
+  engine.add(object, camera);
   engine.render();
   phase += 0.01;
 }

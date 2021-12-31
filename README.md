@@ -26,7 +26,7 @@ The preferred rendering resolution is defined when instantiating the engine. Usu
 
 More examples can be found in [examples](examples/) directory.
 
-### Draw a rotating lines using `addLine` method:
+### Draw a rotating line by passing a `Line` to `add` method:
 
 ```cpp
 #include <Voltage.h>
@@ -38,7 +38,7 @@ void setup() {}
 float phase = 0;
 void loop() {
   engine.clear();
-  engine.addLine({
+  engine.add({
     { cosf(phase) * 0.75, sinf(phase) * 0.75 },
     { cosf(PI + phase) * 0.75, sinf(PI + phase) * 0.75 }
   });
@@ -53,10 +53,12 @@ void loop() {
 ```cpp
 #include <Voltage.h>
 
-voltage::Engine engine(10);
-voltage::Mesh *mesh = voltage::MeshBuilder::createCube(1.0);
-voltage::Object *object = new voltage::Object(mesh);
-voltage::FreeCamera camera;
+using namespace voltage;
+
+Engine engine(10);
+Mesh *mesh = MeshBuilder::createCube(1.0);
+Object *object = new Object(mesh);
+FreeCamera camera;
 
 void setup() {
   camera.setTranslation(0, 0, 5.0);
@@ -67,9 +69,8 @@ void loop() {
   object->setRotation(phase, phase, 0);
 
   engine.clear();
-  engine.addObject(object, camera);
+  engine.add(object, camera);
   engine.render();
   phase += 0.001;
 }
-
 ```

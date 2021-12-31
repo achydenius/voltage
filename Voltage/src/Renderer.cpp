@@ -1,94 +1,93 @@
 #include "Renderer.h"
 
+#include "Clipper.h"
+#include "Engine.h"
+#include "Timer.h"
+#include "utils.h"
+
 using namespace voltage;
 
-void Renderer::drawPoint(const Vector2 &point) const {
-  dacWrite(transform(point.x), transform(point.y));
-}
+void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
+  TIMER_CREATE(transform);
+  TIMER_CREATE(nearClip);
 
-// Draw a line with Bresenham's line algorithm:
-// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-void Renderer::drawLine(const Vector2 &a, const Vector2 &b) const {
-  int32_t x0 = transform(a.x);
-  int32_t y0 = transform(a.y);
-  int32_t x1 = transform(b.x);
-  int32_t y1 = transform(b.y);
+  Matrix view = camera.getMatrix();
 
-  if (abs(y1 - y0) < abs(x1 - x0)) {
-    if (x0 > x1) {
-      drawLineLow(x1, y1, x0, y0);
-    } else {
-      drawLineLow(x0, y0, x1, y1);
+  // Process objects
+  for (uint32_t i = 0; i < objects.getCapacity(); i++) {
+    Object& object = *objects[i];
+
+    TIMER_START(transform);
+    Matrix scale = MatrixScale(object.scaling.x, object.scaling.y, object.scaling.z);
+    Matrix rotate =
+        MatrixRotateXYZ((Vector3){object.rotation.x, object.rotation.y, object.rotation.z});
+    Matrix translate =
+        MatrixTranslate(object.translation.x, object.translation.y, object.translation.z);
+    Matrix matrix = MatrixMultiply(MatrixMultiply(MatrixMultiply(scale, rotate), translate), view);
+
+    // Transform to clip space
+    for (uint32_t i = 0; i < object.mesh->vertexCount; i++) {
+      Vector3& vertex = object.mesh->vertices[i];
+      processedVertices[i] =
+          (Vertex){Vector4Transform((Vector4){vertex.x, vertex.y, vertex.z, 1.0}, matrix), false};
     }
-  } else {
-    if (y0 > y1) {
-      drawLineHigh(x1, y1, x0, y0);
-    } else {
-      drawLineHigh(x0, y0, x1, y1);
+    TIMER_STOP(transform);
+
+    // Clip lines against near plane
+    clippedVertices.clear();
+    processedLines.clear();
+
+    TIMER_START(nearClip);
+    for (uint32_t i = 0; i < object.mesh->edgeCount; i++) {
+      Vertex* ap = &processedVertices[object.mesh->edges[i].aIndex];
+      Vertex* bp = &processedVertices[object.mesh->edges[i].bIndex];
+      Vector4 a = ap->vector;
+      Vector4 b = bp->vector;
+
+      ClipResult clipResult = clipLineNear(a, b);
+
+      switch (clipResult) {
+        case Outside:
+          continue;
+        case Inside:
+          break;
+        case AClipped:
+          clippedVertices.push((Vertex){a, false});
+          ap = &clippedVertices.getLast();
+          break;
+        case BClipped:
+          clippedVertices.push((Vertex){b, false});
+          bp = &clippedVertices.getLast();
+          break;
+      }
+      processedLines.push((Line<Vertex*>){ap, bp});
     }
-  }
-}
+    TIMER_STOP(nearClip);
 
-void Renderer::drawLineLow(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const {
-  int32_t dx = x1 - x0;
-  int32_t dy = y1 - y0;
-  int32_t yi = 1;
-
-  if (dy < 0) {
-    yi = -1;
-    dy = -dy;
-  }
-  int32_t D = (2 * dy) - dx;
-  int32_t y = y0;
-
-  for (int32_t x = x0; x < x1; x++) {
-    dacWrite(x, y);
-    if (D > 0) {
-      y = y + yi;
-      D = D + (2 * (dy - dx));
-    } else {
-      D = D + 2 * dy;
+    TIMER_START(transform);
+    // Project vertices
+    for (uint32_t i = 0; i < processedLines.getSize(); i++) {
+      Vertex* a = processedLines[i].a;
+      Vertex* b = processedLines[i].b;
+      if (!a->isProjected) {
+        a->vector.x /= a->vector.w;
+        a->vector.y /= a->vector.w;
+        a->isProjected = true;
+      }
+      if (!b->isProjected) {
+        b->vector.x /= b->vector.w;
+        b->vector.y /= b->vector.w;
+        b->isProjected = true;
+      }
+      engine->add(
+          (Line2D){(Vector2){a->vector.x, a->vector.y}, (Vector2){b->vector.x, b->vector.y}});
     }
+    TIMER_STOP(transform);
   }
-}
 
-void Renderer::drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const {
-  int32_t dx = x1 - x0;
-  int32_t dy = y1 - y0;
-  int32_t xi = 1;
+  TIMER_SAVE(transform);
+  TIMER_SAVE(nearClip);
 
-  if (dx < 0) {
-    xi = -1;
-    dx = -dx;
-  }
-  int32_t D = (2 * dx) - dy;
-  int32_t x = x0;
-
-  for (int32_t y = y0; y < y1; y++) {
-    dacWrite(x, y);
-    if (D > 0) {
-      x = x + xi;
-      D = D + (2 * (dx - dy));
-    } else {
-      D = D + 2 * dx;
-    }
-  }
-}
-
-uint32_t Renderer::transform(float value) const {
-  return (uint32_t)(value * scaleValueHalf + scaleValueHalf);
-}
-
-// Low-level analog write implementation for Teensy 3.6 is copy-pasted here from the core library:
-// https://github.com/PaulStoffregen/cores/blob/1.54/teensy3/analog.c#L520-L564
-// This improves performance dramatically as the function calls in rendering loop are bypassed.
-typedef int16_t __attribute__((__may_alias__)) aliased_int16_t;
-void Renderer::dacWrite(uint32_t x, uint32_t y) const {
-  SIM_SCGC2 |= SIM_SCGC2_DAC0;
-  DAC0_C0 = DAC_C0_DACEN | DAC_C0_DACRFS;  // 3.3V VDDA is DACREF_2
-  *(volatile aliased_int16_t *)&(DAC0_DAT0L) = x << scaleBits;
-
-  SIM_SCGC2 |= SIM_SCGC2_DAC1;
-  DAC1_C0 = DAC_C0_DACEN | DAC_C0_DACRFS;  // 3.3V VDDA is DACREF_2
-  *(volatile aliased_int16_t *)&(DAC1_DAT0L) = y << scaleBits;
+  TIMER_PRINT(transform);
+  TIMER_PRINT(nearClip);
 }

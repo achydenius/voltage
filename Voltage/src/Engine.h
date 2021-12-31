@@ -5,31 +5,19 @@
 #include "Camera.h"
 #include "Clipper.h"
 #include "Object.h"
+#include "Rasterizer.h"
 #include "Renderer.h"
+#include "types.h"
 
 namespace voltage {
-
-template <typename T>
-struct Line {
-  T a, b;
-};
-
-using Line2D = Line<Vector2>;
-
-struct Vertex {
-  Vector4 vector;
-  bool isProjected;
-};
 
 class Engine {
   static const uint32_t defaultMaxLines = 1000;
   static const uint32_t defaultMaxPoints = 1000;
-  const Renderer renderer;
+  Renderer* renderer;
+  const Rasterizer rasterizer;
   Buffer<Line2D> lines;
   Buffer<Vector2> points;
-  Array<Vertex> processedVertices;
-  Buffer<Vertex> clippedVertices;
-  Buffer<Line<Vertex*> > processedLines;
 
   Viewport viewport = {-1.0, 1.0, 0.75, -0.75};
   Vector2 blankingPoint = {1.0, 1.0};
@@ -37,25 +25,19 @@ class Engine {
  public:
   Engine(uint8_t resolutionBits, uint32_t maxLines = defaultMaxLines,
          uint32_t maxPoints = defaultMaxPoints)
-      : renderer(resolutionBits),
-        lines(maxLines),
-        points(maxPoints),
-        processedVertices(static_cast<size_t>(maxLines * 2)),
-        clippedVertices(maxLines),
-        processedLines(maxLines) {}
+      : rasterizer(resolutionBits), lines(maxLines), points(maxPoints) {
+    renderer = new LineRenderer(this, maxLines);
+  }
+  ~Engine() { delete renderer; };
+
   void setViewport(const Viewport& viewport);
   void setBlankingPoint(const Vector2& blankingPoint);
   void clear();
-  void addLine(const Line2D& line);
-  void addLine(const Line2D& line, const Viewport& viewport);
-  void addPoint(const Vector2& point);
-  void addPoint(const Vector2& point, const Viewport& viewport);
+  void add(const Line2D& line);
+  void add(const Vector2& point);
+  void add(Object* object, Camera& camera);
+  void add(const Array<Object*>& objects, Camera& camera);
   void addViewport();
-  void addViewport(const Viewport& viewport);
-  void addObject(Object* object, Camera& camera);
-  void addObject(Object* object, Camera& camera, const Viewport& viewport);
-  void addObjects(const Array<Object*>& objects, Camera& camera);
-  void addObjects(const Array<Object*>& objects, Camera& camera, const Viewport& viewport);
   void render();
 };
 

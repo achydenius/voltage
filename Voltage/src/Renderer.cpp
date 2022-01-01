@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include <stdlib.h>
+
 #include "Clipper.h"
 #include "Engine.h"
 #include "Timer.h"

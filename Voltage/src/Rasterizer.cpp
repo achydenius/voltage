@@ -2,8 +2,9 @@
 
 using namespace voltage;
 
-void Rasterizer::drawPoint(const Vector2 &point) const {
+void Rasterizer::drawPoint(const Vector2 &point, const uint32_t micros) const {
   dacWrite(transform(point.x), transform(point.y));
+  delayMicroseconds(100);
 }
 
 // Draw a line with Bresenham's line algorithm:

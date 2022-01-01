@@ -4,6 +4,8 @@
 
 using namespace voltage;
 
+void Engine::setRenderer(Renderer* renderer) { this->renderer = renderer; }
+
 void Engine::setViewport(const Viewport& viewport) { this->viewport = viewport; }
 
 void Engine::setBlankingPoint(const Vector2& blankingPoint) { this->blankingPoint = blankingPoint; }
@@ -57,7 +59,7 @@ void Engine::render() {
   }
 
   for (uint32_t i = 0; i < points.getSize(); i++) {
-    rasterizer.drawPoint(points[i]);
+    rasterizer.drawPoint(points[i], 100);
   }
   TIMER_STOP(render);
   TIMER_SAVE(render);
@@ -65,5 +67,5 @@ void Engine::render() {
   TIMER_PRINT(render);
 
   // Move beam to blanking point (i.e. outside the screen) when finished drawing
-  rasterizer.drawPoint(blankingPoint);
+  rasterizer.drawPoint(blankingPoint, 0);
 }

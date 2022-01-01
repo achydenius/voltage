@@ -23,13 +23,16 @@ class Engine {
   Vector2 blankingPoint = {1.0, 1.0};
 
  public:
-  Engine(uint8_t resolutionBits, uint32_t maxLines = defaultMaxLines,
-         uint32_t maxPoints = defaultMaxPoints)
+  Engine(const uint8_t resolutionBits, const Renderer* renderer = nullptr,
+         const uint32_t maxLines = defaultMaxLines, const uint32_t maxPoints = defaultMaxPoints)
       : rasterizer(resolutionBits), lines(maxLines), points(maxPoints) {
-    renderer = new LineRenderer(this, maxLines);
+    if (renderer == nullptr) {
+      this->renderer = new LineRenderer(this, maxLines);
+    }
   }
   ~Engine() { delete renderer; };
 
+  void setRenderer(Renderer* renderer);
   void setViewport(const Viewport& viewport);
   void setBlankingPoint(const Vector2& blankingPoint);
   void clear();

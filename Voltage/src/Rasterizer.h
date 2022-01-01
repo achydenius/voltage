@@ -23,7 +23,7 @@ class Rasterizer {
         scaleBits(Rasterizer::maxResolutionBits - resolutionBits),
         scaleValueHalf(pow(2, resolutionBits - 1) - 1) {}
 
-  void drawPoint(const Vector2& point) const;
+  void drawPoint(const Vector2& point, uint32_t micros) const;
   void drawLine(const Vector2& a, const Vector2& b) const;
 
  private:

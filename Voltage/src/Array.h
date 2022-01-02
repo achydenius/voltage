@@ -36,6 +36,7 @@ class Buffer : public Array<T> {
   void clear() { index = 0; }
   void push(const T& element) { Array<T>::elements[index++] = element; }
   T& getLast() { return Array<T>::elements[index - 1]; }
+  T* getElements() { return Array<T>::elements; }
 };
 
 }  // namespace voltage

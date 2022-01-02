@@ -1,29 +1,29 @@
 #include "Mesh.h"
 
-#include "Array.h"
+#include <algorithm>
+
 #include "utils.h"
 
 namespace voltage {
 
-Mesh::Mesh(const Vector3* sourceVertices, const uint32_t sourceVertexCount, const Edge* sourceEdges,
-           const uint32_t sourceEdgeCount) {
+Mesh::Mesh(const Vector3* sourceVertices, const uint32_t sourceVertexCount, const Face* sourceFaces,
+           const uint32_t sourceFaceCount) {
   vertexCount = sourceVertexCount;
-  edgeCount = sourceEdgeCount;
+  faceCount = sourceFaceCount;
+
   vertices = new Vector3[vertexCount];
-  edges = new Edge[edgeCount];
+  faces = new Face[faceCount];
 
-  for (uint32_t i = 0; i < vertexCount; i++) {
-    vertices[i] = sourceVertices[i];
-  }
+  std::copy(sourceVertices, sourceVertices + sourceVertexCount, vertices);
+  std::copy(sourceFaces, sourceFaces + sourceFaceCount, faces);
 
-  for (uint32_t i = 0; i < edgeCount; i++) {
-    edges[i] = sourceEdges[i];
-  }
+  generateEdges();
 }
 
 Mesh::~Mesh() {
   delete vertices;
   delete edges;
+  delete faces;
 }
 
 void Mesh::scale(const float value) {
@@ -32,24 +32,56 @@ void Mesh::scale(const float value) {
   }
 }
 
-namespace MeshBuilder {
-Mesh* createCube(float size) {
-  float half = size / 2;
-  Vector3 vertices[] = {{-half, half, half},  {-half, half, -half}, {half, half, -half},
-                        {half, half, half},   {-half, -half, half}, {-half, -half, -half},
-                        {half, -half, -half}, {half, -half, half}};
-  Edge edges[] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6},
-                  {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
-
-  return new Mesh(vertices, 8, edges, 12);
+Edge* Mesh::findEdge(const Edge& edge, const Buffer<Edge>& edges) const {
+  for (uint32_t i = 0; i < edges.getSize(); i++) {
+    if ((edge.aIndex == edges[i].aIndex && edge.bIndex == edges[i].bIndex) ||
+        (edge.aIndex == edges[i].bIndex && edge.bIndex == edges[i].aIndex)) {
+      return &edges[i];
+    }
+  }
+  return nullptr;
 }
+
+void Mesh::generateEdges() {
+  // TODO: Use maxLines constant from the Engine class?
+  Buffer<Edge> edgeBuffer(1000);
+
+  for (uint32_t i = 0; i < faceCount; i++) {
+    Face& face = faces[i];
+
+    for (uint32_t j = 0; j < face.vertexCount; j++) {
+      Edge edge = {face.vertexIndices[j], face.vertexIndices[(j + 1) % face.vertexCount]};
+      if (findEdge(edge, edgeBuffer) == nullptr) {
+        edgeBuffer.push(edge);
+      }
+      face.edgeIndices[j] = edgeBuffer.getSize() - 1;
+    }
+  }
+
+  edges = new Edge[edgeBuffer.getSize()];
+  edgeCount = edgeBuffer.getSize();
+  std::copy(edgeBuffer.getElements(), edgeBuffer.getElements() + edgeBuffer.getSize(), edges);
+}
+
+namespace MeshBuilder {
 
 Mesh* createPlane(float size) {
   float half = size / 2;
   Vector3 vertices[] = {{-half, 0, half}, {-half, 0, -half}, {half, 0, -half}, {half, 0, half}};
-  Edge edges[] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}};
+  Face faces[] = {{0, 1, 2, 3}};
 
-  return new Mesh(vertices, 4, edges, 4);
+  return new Mesh(vertices, 4, faces, 1);
+}
+
+Mesh* createCube(float size) {
+  float half = size / 2;
+  Vector3 vertices[] = {{-half, half, half},  {half, half, half},   {half, half, -half},
+                        {-half, half, -half}, {-half, -half, half}, {half, -half, half},
+                        {half, -half, -half}, {-half, -half, -half}};
+  Face faces[] = {{0, 1, 2, 3}, {4, 5, 6, 7}, {0, 4, 5, 1},
+                  {1, 5, 6, 2}, {2, 6, 7, 3}, {3, 7, 4, 0}};
+
+  return new Mesh(vertices, 8, faces, 6);
 }
 
 bool edgeEquals(const Edge& edge, const uint32_t aIndex, const uint32_t bIndex) {
@@ -69,6 +101,10 @@ void addEdge(const Edge& edge, Buffer<Edge>& buffer) {
     buffer.push(edge);
   }
 }
+
+struct Triangle {
+  uint32_t aIndex, bIndex, cIndex;
+};
 
 struct EdgeMidpoint : public Edge {
   uint32_t index;
@@ -108,11 +144,11 @@ uint32_t getMidpoint(const uint32_t aIndex, const uint32_t bIndex, Buffer<Vector
 
 // Implementation idea from:
 // http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
-Mesh* createIcosphere(const float size, const uint32_t iterations) {
+Mesh* createIcosphere(const float size, const uint32_t subdivisions) {
   const uint32_t icosahedronVertexCount = 12;
   const uint32_t icosahedronTriangleCount = 20;
 
-  const uint32_t vertexCount = 10 * pow(4, iterations) + 2;
+  const uint32_t vertexCount = 10 * pow(4, (subdivisions - 1)) + 2;
   const uint32_t triangleCount = vertexCount * 2 - 4;
   const uint32_t edgeCount = triangleCount * 3 / 2;
 
@@ -165,11 +201,11 @@ Mesh* createIcosphere(const float size, const uint32_t iterations) {
     sourceTriangles.push(icosahedronTriangles[i]);
   }
 
-  for (uint32_t i = 0; i < iterations; i++) {
+  for (uint32_t i = 1; i < subdivisions; i++) {
     targetTriangles.clear();
 
-    for (uint32_t i = 0; i < sourceTriangles.getSize(); i++) {
-      Triangle& triangle = sourceTriangles[i];
+    for (uint32_t j = 0; j < sourceTriangles.getSize(); j++) {
+      Triangle& triangle = sourceTriangles[j];
 
       uint32_t aIndex = getMidpoint(triangle.aIndex, triangle.bIndex, vertexBuffer, midpointBuffer);
       uint32_t bIndex = getMidpoint(triangle.bIndex, triangle.cIndex, vertexBuffer, midpointBuffer);
@@ -182,8 +218,8 @@ Mesh* createIcosphere(const float size, const uint32_t iterations) {
     }
 
     sourceTriangles.clear();
-    for (uint32_t i = 0; i < targetTriangles.getSize(); i++) {
-      sourceTriangles.push(targetTriangles[i]);
+    for (uint32_t j = 0; j < targetTriangles.getSize(); j++) {
+      sourceTriangles.push(targetTriangles[j]);
     }
   }
 
@@ -195,16 +231,19 @@ Mesh* createIcosphere(const float size, const uint32_t iterations) {
   }
 
   Edge edges[edgeBuffer.getSize()];
-  for (uint32_t i = 0; i < edgeBuffer.getSize(); i++) {
-    edges[i] = (Edge){edgeBuffer[i].aIndex, edgeBuffer[i].bIndex};
-  }
+  std::copy(edgeBuffer.getElements(), edgeBuffer.getElements() + edgeBuffer.getSize(), edges);
 
   Vector3 vertices[vertexBuffer.getSize()];
-  for (uint32_t i = 0; i < vertexBuffer.getSize(); i++) {
-    vertices[i] = vertexBuffer[i];
+  std::copy(vertexBuffer.getElements(), vertexBuffer.getElements() + vertexBuffer.getSize(),
+            vertices);
+
+  Face faces[sourceTriangles.getSize()];
+  for (uint32_t i = 0; i < sourceTriangles.getSize(); i++) {
+    Triangle& triangle = sourceTriangles[i];
+    faces[i] = (Face){triangle.aIndex, triangle.bIndex, triangle.cIndex};
   }
 
-  Mesh* mesh = new Mesh(vertices, vertexBuffer.getSize(), edges, edgeBuffer.getSize());
+  Mesh* mesh = new Mesh(vertices, vertexBuffer.getSize(), faces, sourceTriangles.getSize());
   mesh->scale(size);
 
   return mesh;

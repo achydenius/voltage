@@ -35,6 +35,9 @@ class LineRenderer : public Renderer {
         processedLines(maxLines) {}
 
   void add(const Array<Object*>& objects, Camera& camera);
+
+ private:
+  void add(Object* object, const Matrix& viewProjectionMatrix);
 };
 
 }  // namespace voltage

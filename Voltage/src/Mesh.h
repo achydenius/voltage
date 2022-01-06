@@ -1,5 +1,5 @@
-#ifndef VOLTAGE_MESH_
-#define VOLTAGE_MESH_
+#ifndef VOLTAGE_MESH_H_
+#define VOLTAGE_MESH_H_
 
 #include <Arduino.h>
 
@@ -50,12 +50,6 @@ class Mesh {
   Edge* findEdge(const Edge& edge, const Buffer<Edge>& edges) const;
   void generateEdges();
 };
-
-namespace MeshBuilder {
-Mesh* createPlane(const float size);
-Mesh* createCube(const float size);
-Mesh* createIcosphere(const float size, const uint32_t subdivisions = 1);
-};  // namespace MeshBuilder
 
 };  // namespace voltage
 

@@ -7,10 +7,11 @@
 
 using namespace voltage;
 
-void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
-  TIMER_CREATE(transform);
-  TIMER_CREATE(nearClip);
+TIMER_CREATE(transform);
+TIMER_CREATE(nearClip);
+TIMER_CREATE(viewportClip);
 
+void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
   Matrix matrix = camera.getViewProjectionMatrix();
 
   for (uint32_t i = 0; i < objects.getCapacity(); i++) {
@@ -19,9 +20,11 @@ void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
 
   TIMER_SAVE(transform);
   TIMER_SAVE(nearClip);
+  TIMER_SAVE(viewportClip);
 
   TIMER_PRINT(transform);
   TIMER_PRINT(nearClip);
+  TIMER_PRINT(viewportClip);
 }
 
 void LineRenderer::add(Object* object, const Matrix& viewProjectionMatrix) {
@@ -71,11 +74,12 @@ void LineRenderer::add(Object* object, const Matrix& viewProjectionMatrix) {
   }
   TIMER_STOP(nearClip);
 
-  TIMER_START(transform);
   // Project vertices
   for (uint32_t i = 0; i < processedLines.getSize(); i++) {
     Vertex* a = processedLines[i].a;
     Vertex* b = processedLines[i].b;
+
+    TIMER_START(transform);
     if (!a->isProjected) {
       a->vector.x /= a->vector.w;
       a->vector.y /= a->vector.w;
@@ -86,7 +90,10 @@ void LineRenderer::add(Object* object, const Matrix& viewProjectionMatrix) {
       b->vector.y /= b->vector.w;
       b->isProjected = true;
     }
+    TIMER_STOP(transform);
+
+    TIMER_START(viewportClip);
     engine->add((Line2D){(Vector2){a->vector.x, a->vector.y}, (Vector2){b->vector.x, b->vector.y}});
+    TIMER_STOP(viewportClip);
   }
-  TIMER_STOP(transform);
 }

@@ -1,3 +1,6 @@
+// Uncomment for enabling performance profiling
+// #define VOLTAGE_PROFILE_SAMPLES 100
+
 #ifndef VOLTAGE_TIMER_H_
 #define VOLTAGE_TIMER_H_
 
@@ -5,7 +8,7 @@
 
 #include <string>
 
-#ifdef VOLTAGE_PROFILE
+#ifdef VOLTAGE_PROFILE_SAMPLES
 #define TIMER_CREATE(name) static Timer _timer_##name(#name, VOLTAGE_PROFILE_SAMPLES)
 #define TIMER_START(name) _timer_##name.start()
 #define TIMER_STOP(name) _timer_##name.stop()

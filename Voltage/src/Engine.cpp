@@ -1,9 +1,5 @@
 #include "Engine.h"
 
-// Uncomment for enabling performance profiling
-// #define VOLTAGE_PROFILE_SAMPLES 100
-// #define VOLTAGE_PROFILE
-
 #include "Timer.h"
 
 using namespace voltage;

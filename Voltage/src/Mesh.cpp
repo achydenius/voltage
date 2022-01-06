@@ -30,11 +30,12 @@ void Mesh::scale(const float value) {
   }
 }
 
-Edge* Mesh::findEdge(const Edge& edge, const Buffer<Edge>& edges) const {
+Edge* Mesh::findEdge(const Pair<uint32_t>& indices, const Buffer<Edge>& edges) {
   for (uint32_t i = 0; i < edges.getSize(); i++) {
-    if ((edge.aIndex == edges[i].aIndex && edge.bIndex == edges[i].bIndex) ||
-        (edge.aIndex == edges[i].bIndex && edge.bIndex == edges[i].aIndex)) {
-      return &edges[i];
+    Edge* edge = &edges[i];
+    if ((indices.a == edge->vertexIndices.a && indices.b == edge->vertexIndices.b) ||
+        (indices.a == edge->vertexIndices.b && indices.b == edge->vertexIndices.a)) {
+      return edge;
     }
   }
   return nullptr;
@@ -48,11 +49,15 @@ void Mesh::generateEdges() {
     Face& face = faces[i];
 
     for (uint32_t j = 0; j < face.vertexCount; j++) {
-      Edge edge = {face.vertexIndices[j], face.vertexIndices[(j + 1) % face.vertexCount]};
-      if (findEdge(edge, edgeBuffer) == nullptr) {
-        edgeBuffer.push(edge);
+      Pair<uint32_t> indices = {face.vertexIndices[j],
+                                face.vertexIndices[(j + 1) % face.vertexCount]};
+      Edge* existingEdge = findEdge(indices, edgeBuffer);
+
+      if (existingEdge != nullptr) {
+        existingEdge->faces.b = &face;
+      } else {
+        edgeBuffer.push((Edge){indices.a, indices.b, &face, nullptr});
       }
-      face.edgeIndices[j] = edgeBuffer.getSize() - 1;
     }
   }
 

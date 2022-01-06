@@ -6,11 +6,14 @@
 namespace voltage {
 
 template <typename T>
-struct Line {
+struct Pair {
   T a, b;
 };
 
-using Line2D = Line<Vector2>;
+template <typename T>
+using Line = Pair<T>;
+
+using Line2D = Pair<Vector2>;
 
 }  // namespace voltage
 

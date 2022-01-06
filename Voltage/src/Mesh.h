@@ -8,27 +8,29 @@
 
 #include "Array.h"
 #include "raymath.h"
+#include "types.h"
 
 namespace voltage {
-
-struct Edge {
-  uint32_t aIndex, bIndex;
-};
 
 class Face {
  public:
   uint32_t vertexCount;
   uint32_t* vertexIndices;
-  uint32_t* edgeIndices;
+  // TODO: Use Array/Buffer in Renderer instead?
+  bool isVisible;
 
   Face() : vertexCount(0) {}
   Face(const uint32_t vertexCount) : vertexCount(vertexCount) {
     vertexIndices = new uint32_t[vertexCount];
-    edgeIndices = new uint32_t[vertexCount];
   }
   Face(const std::initializer_list<uint32_t> il) : Face(il.size()) {
     std::copy(il.begin(), il.end(), vertexIndices);
   }
+};
+
+struct Edge {
+  Pair<uint32_t> vertexIndices;
+  Pair<Face*> faces;
 };
 
 class Mesh {
@@ -47,7 +49,7 @@ class Mesh {
   void scale(const float value);
 
  private:
-  Edge* findEdge(const Edge& edge, const Buffer<Edge>& edges) const;
+  Edge* findEdge(const Pair<uint32_t>& indices, const Buffer<Edge>& edges);
   void generateEdges();
 };
 

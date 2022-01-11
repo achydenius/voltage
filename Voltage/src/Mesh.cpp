@@ -16,6 +16,7 @@ Mesh::Mesh(const Vector3* sourceVertices, const uint32_t sourceVertexCount, cons
   std::copy(sourceFaces, sourceFaces + sourceFaceCount, faces);
 
   generateEdges();
+  generateNormals();
 }
 
 Mesh::~Mesh() {
@@ -42,8 +43,7 @@ Edge* Mesh::findEdge(const Pair<uint32_t>& indices, const Buffer<Edge>& edges) {
 }
 
 void Mesh::generateEdges() {
-  // TODO: Use maxLines constant from the Engine class?
-  Buffer<Edge> edgeBuffer(1000);
+  Buffer<Edge> edgeBuffer(vertexCount * (vertexCount - 1) / 2);
 
   for (uint32_t i = 0; i < faceCount; i++) {
     Face& face = faces[i];
@@ -64,6 +64,17 @@ void Mesh::generateEdges() {
   edges = new Edge[edgeBuffer.getSize()];
   edgeCount = edgeBuffer.getSize();
   std::copy(edgeBuffer.getElements(), edgeBuffer.getElements() + edgeBuffer.getSize(), edges);
+}
+
+void Mesh::generateNormals() {
+  for (uint32_t i = 0; i < faceCount; i++) {
+    Face& face = faces[i];
+
+    Vector3 a = Vector3Subtract(vertices[face.vertexIndices[1]], vertices[face.vertexIndices[0]]);
+    Vector3 b = Vector3Subtract(vertices[face.vertexIndices[2]], vertices[face.vertexIndices[0]]);
+    Vector3 normal = Vector3CrossProduct(a, b);
+    face.normal = Vector3Normalize(normal);
+  }
 }
 
 }  // namespace voltage

@@ -16,7 +16,7 @@ class Face {
  public:
   uint32_t vertexCount;
   uint32_t* vertexIndices;
-  // TODO: Use Array/Buffer in Renderer instead?
+  Vector3 normal;
   bool isVisible;
 
   Face() : vertexCount(0) {}
@@ -51,6 +51,7 @@ class Mesh {
  private:
   Edge* findEdge(const Pair<uint32_t>& indices, const Buffer<Edge>& edges);
   void generateEdges();
+  void generateNormals();
 };
 
 };  // namespace voltage

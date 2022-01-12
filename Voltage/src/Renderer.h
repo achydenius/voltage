@@ -10,7 +10,7 @@ namespace voltage {
 
 struct Vertex {
   Vector4 vector;
-  bool isProjected;
+  bool isVisible;
 };
 
 class Engine;
@@ -37,7 +37,7 @@ class LineRenderer : public Renderer {
   void add(const Array<Object*>& objects, Camera& camera);
 
  private:
-  void add(Object* object, const Matrix& viewProjectionMatrix);
+  void add(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
 };
 
 }  // namespace voltage

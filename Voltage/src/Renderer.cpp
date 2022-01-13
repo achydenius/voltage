@@ -51,7 +51,7 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
     if (object->faceCulling == None) {
       face.isVisible = true;
     } else {
-      Vector3 vertex = mesh->vertices[mesh->faces[i].vertexIndices[0]].original;
+      Vector3 vertex = face.vertices[0]->original;
       Vector3 view = Vector3Subtract(camera, vertex);
       float angle = Vector3DotProduct(view, face.normal);
 
@@ -64,7 +64,7 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
 
     if (face.isVisible) {
       for (uint32_t j = 0; j < face.vertexCount; j++) {
-        mesh->vertices[face.vertexIndices[j]].isVisible = true;
+        face.vertices[j]->isVisible = true;
       }
     }
   }
@@ -88,8 +88,8 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
   TIMER_START(nearClip);
   for (uint32_t i = 0; i < mesh->edgeCount; i++) {
     Edge& edge = mesh->edges[i];
-    Vertex* ap = &mesh->vertices[edge.vertexIndices.a];
-    Vertex* bp = &mesh->vertices[edge.vertexIndices.b];
+    Vertex* ap = edge.vertices.a;
+    Vertex* bp = edge.vertices.b;
 
     edge.isVisible = false;
 
@@ -118,15 +118,11 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
         bp = &clippedVertices.getLast();
         break;
     }
-    if (object->faceCulling != None ||
-        (mesh->edges[i].faces.a->isVisible || mesh->edges[i].faces.b->isVisible)) {
-      edge.clipped = {ap, bp};
-      edge.isVisible = true;
-    }
+
+    edge.clipped = {ap, bp};
+    edge.isVisible = true;
   }
   TIMER_STOP(nearClip);
-
-  uint32_t visibleVerticesCount = 0;
 
   // Project vertices
   TIMER_START(transform);
@@ -135,14 +131,12 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
     if (vertex.isVisible) {
       vertex.transformed.x /= vertex.transformed.w;
       vertex.transformed.y /= vertex.transformed.w;
-      visibleVerticesCount++;
     }
   }
   for (uint32_t i = 0; i < clippedVertices.getSize(); i++) {
     Vector4& transformed = clippedVertices[i].transformed;
     transformed.x /= transformed.w;
     transformed.y /= transformed.w;
-    visibleVerticesCount++;
   }
   TIMER_STOP(transform);
 

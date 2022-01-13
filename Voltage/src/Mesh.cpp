@@ -9,10 +9,12 @@ Mesh::Mesh(const Vector3* sourceVertices, const uint32_t sourceVertexCount, cons
   vertexCount = sourceVertexCount;
   faceCount = sourceFaceCount;
 
-  vertices = new Vector3[vertexCount];
+  vertices = new Vertex[vertexCount];
   faces = new Face[faceCount];
 
-  std::copy(sourceVertices, sourceVertices + sourceVertexCount, vertices);
+  for (uint32_t i = 0; i < sourceVertexCount; i++) {
+    vertices[i].original = sourceVertices[i];
+  }
   std::copy(sourceFaces, sourceFaces + sourceFaceCount, faces);
 
   generateEdges();
@@ -27,7 +29,7 @@ Mesh::~Mesh() {
 
 void Mesh::scale(const float value) {
   for (uint32_t i = 0; i < vertexCount; i++) {
-    vertices[i] = Vector3Scale(vertices[i], value);
+    vertices[i].original = Vector3Scale(vertices[i].original, value);
   }
 }
 
@@ -70,8 +72,10 @@ void Mesh::generateNormals() {
   for (uint32_t i = 0; i < faceCount; i++) {
     Face& face = faces[i];
 
-    Vector3 a = Vector3Subtract(vertices[face.vertexIndices[1]], vertices[face.vertexIndices[0]]);
-    Vector3 b = Vector3Subtract(vertices[face.vertexIndices[2]], vertices[face.vertexIndices[0]]);
+    Vector3 a = Vector3Subtract(vertices[face.vertexIndices[1]].original,
+                                vertices[face.vertexIndices[0]].original);
+    Vector3 b = Vector3Subtract(vertices[face.vertexIndices[2]].original,
+                                vertices[face.vertexIndices[0]].original);
     Vector3 normal = Vector3CrossProduct(a, b);
     face.normal = Vector3Normalize(normal);
   }

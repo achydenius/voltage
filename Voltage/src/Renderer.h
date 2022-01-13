@@ -8,11 +8,6 @@
 
 namespace voltage {
 
-struct Vertex {
-  Vector4 vector;
-  bool isVisible;
-};
-
 class Engine;
 
 class Renderer {
@@ -23,16 +18,10 @@ class Renderer {
 
 class LineRenderer : public Renderer {
   Engine* engine;
-  Array<Vertex> processedVertices;
   Buffer<Vertex> clippedVertices;
-  Buffer<Line<Vertex*> > processedLines;
 
  public:
-  LineRenderer(Engine* engine, uint32_t maxLines)
-      : engine(engine),
-        processedVertices(static_cast<size_t>(maxLines * 2)),
-        clippedVertices(maxLines),
-        processedLines(maxLines) {}
+  LineRenderer(Engine* engine, uint32_t maxLines) : engine(engine), clippedVertices(maxLines) {}
 
   void add(const Array<Object*>& objects, Camera& camera);
 

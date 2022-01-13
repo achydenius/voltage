@@ -12,6 +12,12 @@
 
 namespace voltage {
 
+struct Vertex {
+  Vector3 original;
+  Vector4 transformed;
+  bool isVisible;
+};
+
 class Face {
  public:
   uint32_t vertexCount;
@@ -31,6 +37,8 @@ class Face {
 struct Edge {
   Pair<uint32_t> vertexIndices;
   Pair<Face*> faces;
+  Pair<Vertex*> clipped;
+  bool isVisible;
 };
 
 class Mesh {
@@ -38,7 +46,7 @@ class Mesh {
   uint32_t vertexCount;
   uint32_t edgeCount;
   uint32_t faceCount;
-  Vector3* vertices;
+  Vertex* vertices;
   Edge* edges;
   Face* faces;
 

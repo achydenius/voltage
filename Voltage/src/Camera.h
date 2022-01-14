@@ -8,52 +8,53 @@ namespace voltage {
 class Camera {
  protected:
   float fov, aspect, near, far;
-  Matrix matrix;
+  Matrix viewMatrix, projectionMatrix;
 
  public:
   Camera(float fov = M_PI_4, float aspect = 1.0, float near = 0.01, float far = 100.0)
       : fov(fov), aspect(aspect), near(near), far(far) {
-    matrix = MatrixIdentity();
+    viewMatrix = MatrixIdentity();
+    projectionMatrix = MatrixIdentity();
   }
 
-  virtual Matrix& getMatrix() = 0;
+  virtual Matrix& getViewMatrix() = 0;
+  virtual Matrix& getProjectionMatrix() {
+    projectionMatrix = MatrixPerspective(fov, aspect, near, far);
+    return projectionMatrix;
+  };
 };
 
 class FreeCamera : public Camera {
-  Vector3 rotation = (Vector3){0, 0, 0};
-  Vector3 translation = (Vector3){0, 0, 0};
+  Vector3 rotation = {0, 0, 0};
+  Vector3 translation = {0, 0, 0};
 
  public:
   FreeCamera(float fov, float aspect, float near, float far) : Camera(fov, aspect, near, far) {}
   FreeCamera() : Camera() {}
 
-  Matrix& getMatrix() {
-    Matrix rotate = MatrixRotateXYZ((Vector3){-rotation.x, -rotation.y, -rotation.z});
-    Matrix translate = MatrixTranslate(-translation.x, -translation.y, -translation.z);
-    matrix = MatrixMultiply(MatrixMultiply(translate, rotate),
-                            MatrixPerspective(fov, aspect, near, far));
-    return matrix;
+  Matrix& getViewMatrix() {
+    viewMatrix = MatrixMultiply(MatrixTranslate(-translation.x, -translation.y, -translation.z),
+                                MatrixRotateXYZ({-rotation.x, -rotation.y, -rotation.z}));
+    return viewMatrix;
   }
 
-  void setRotation(float x, float y, float z) { rotation = (Vector3){x, y, z}; }
-  void setTranslation(float x, float y, float z) { translation = (Vector3){x, y, z}; }
+  void setRotation(float x, float y, float z) { rotation = {x, y, z}; }
+  void setTranslation(float x, float y, float z) { translation = {x, y, z}; }
 };
 
 class LookAtCamera : public Camera {
-  Vector3 eye = (Vector3){0, 0, 0};
-  Vector3 target = (Vector3){0, 0, 0};
-  Vector3 up = (Vector3){0, 1.0, 0};
+  Vector3 eye = {0, 0, 0};
+  Vector3 target = {0, 0, 0};
+  Vector3 up = {0, 1.0, 0};
 
  public:
-  Matrix& getMatrix() {
-    matrix =
-        MatrixMultiply(MatrixLookAt(eye, target, up), MatrixPerspective(fov, aspect, near, far));
-    return matrix;
+  Matrix& getViewMatrix() {
+    viewMatrix = MatrixLookAt(eye, target, up);
+    return viewMatrix;
   }
 
-  void setEye(float x, float y, float z) { eye = (Vector3){x, y, z}; }
-
-  void setTarget(float x, float y, float z) { target = (Vector3){x, y, z}; }
+  void setEye(float x, float y, float z) { eye = {x, y, z}; }
+  void setTarget(float x, float y, float z) { target = {x, y, z}; }
 };
 
 };  // namespace voltage

@@ -6,12 +6,16 @@
 
 namespace voltage {
 
+enum FaceCulling { Front, Back, None };
+
 class Object {
  public:
   Mesh* mesh;
   Vector3 rotation, translation, scaling;
+  Matrix modelMatrix;
+  FaceCulling faceCulling;
 
-  Object(Mesh* m) : mesh(m) {
+  Object(Mesh* mesh) : mesh(mesh), faceCulling(None) {
     setRotation(0, 0, 0);
     setTranslation(0, 0, 0);
     setScaling(1.0);
@@ -21,6 +25,15 @@ class Object {
   void setTranslation(float x, float y, float z) { translation = (Vector3){x, y, z}; }
   void setScaling(float x, float y, float z) { scaling = (Vector3){x, y, z}; }
   void setScaling(float scale) { scaling = (Vector3){scale, scale, scale}; }
+
+  Matrix& getModelMatrix() {
+    Matrix scale = MatrixScale(scaling.x, scaling.y, scaling.z);
+    Matrix rotate = MatrixRotateXYZ(rotation);
+    Matrix translate = MatrixTranslate(translation.x, translation.y, translation.z);
+    modelMatrix = MatrixMultiply(MatrixMultiply(scale, rotate), translate);
+
+    return modelMatrix;
+  }
 };
 
 }  // namespace voltage

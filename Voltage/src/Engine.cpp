@@ -17,7 +17,7 @@ void Engine::add(const Line2D& line) {
   Vector2 a = line.a;
   Vector2 b = line.b;
   if (clipLine(a, b, viewport)) {
-    lines.push((Line2D){a, b});
+    lines.push({a, b});
   }
 }
 
@@ -45,7 +45,7 @@ void Engine::addViewport() {
   };
 
   for (uint32_t i = 0; i < 4; i++) {
-    add((Line2D){points[i], points[(i + 1) % 4]});
+    add({points[i], points[(i + 1) % 4]});
   }
 }
 

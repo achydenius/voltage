@@ -10,7 +10,7 @@ namespace MeshBuilder {
 Mesh* createPlane(float size) {
   float half = size / 2;
   Vector3 vertices[] = {{-half, 0, half}, {-half, 0, -half}, {half, 0, -half}, {half, 0, half}};
-  Face faces[] = {{0, 1, 2, 3}};
+  FaceDefinition faces[] = {{0, 1, 2, 3}};
 
   return new Mesh(vertices, 4, faces, 1);
 }
@@ -20,18 +20,27 @@ Mesh* createCube(float size) {
   Vector3 vertices[] = {{-half, half, half},  {half, half, half},   {half, half, -half},
                         {-half, half, -half}, {-half, -half, half}, {half, -half, half},
                         {half, -half, -half}, {-half, -half, -half}};
-  Face faces[] = {{0, 1, 2, 3}, {4, 7, 6, 5}, {0, 4, 5, 1},
-                  {1, 5, 6, 2}, {2, 6, 7, 3}, {3, 7, 4, 0}};
+  FaceDefinition faces[] = {{0, 1, 2, 3}, {4, 7, 6, 5}, {0, 4, 5, 1},
+                            {1, 5, 6, 2}, {2, 6, 7, 3}, {3, 7, 4, 0}};
 
   return new Mesh(vertices, 8, faces, 6);
 }
 
-bool edgeEquals(const Edge& edge, const Pair<uint32_t>& indices) {
-  return (edge.vertexIndices.a == indices.a && edge.vertexIndices.b == indices.b) ||
-         (edge.vertexIndices.a == indices.b && edge.vertexIndices.b == indices.a);
+struct Triangle {
+  uint32_t vertexIndices[3];
+};
+
+struct EdgeMidpoint {
+  Pair<uint32_t> vertexIndices;
+  uint32_t index;
+};
+
+bool edgeEquals(const EdgeMidpoint& edge, const Pair<uint32_t>& vertices) {
+  return (edge.vertexIndices.a == vertices.a && edge.vertexIndices.b == vertices.b) ||
+         (edge.vertexIndices.a == vertices.b && edge.vertexIndices.b == vertices.a);
 }
 
-void addEdge(const Edge& edge, Buffer<Edge>& buffer) {
+void addEdge(const EdgeMidpoint& edge, Buffer<EdgeMidpoint>& buffer) {
   bool exists = false;
   for (uint32_t i = 0; i < buffer.getSize(); i++) {
     if (edgeEquals(edge, buffer[i].vertexIndices)) {
@@ -43,20 +52,6 @@ void addEdge(const Edge& edge, Buffer<Edge>& buffer) {
     buffer.push(edge);
   }
 }
-
-struct Triangle {
-  uint32_t vertexIndices[3];
-};
-
-struct EdgeMidpoint : public Edge {
-  uint32_t index;
-
-  EdgeMidpoint() { vertexIndices.a = vertexIndices.b = 0; }
-  EdgeMidpoint(uint32_t ai, uint32_t bi, uint32_t index) : index(index) {
-    vertexIndices.a = ai;
-    vertexIndices.b = bi;
-  }
-};
 
 uint32_t getMidpoint(const Pair<uint32_t>& indices, Buffer<Vector3>& vertexBuffer,
                      Buffer<EdgeMidpoint>& midpointBuffer) {
@@ -79,7 +74,7 @@ uint32_t getMidpoint(const Pair<uint32_t>& indices, Buffer<Vector3>& vertexBuffe
   uint32_t index = vertexBuffer.getSize();
 
   vertexBuffer.push(Vector3Normalize(midpoint));
-  midpointBuffer.push((EdgeMidpoint){indices.a, indices.b, index});
+  midpointBuffer.push({indices.a, indices.b, index});
 
   return index;
 }
@@ -149,17 +144,14 @@ Mesh* createIcosphere(const float size, const uint32_t subdivisions) {
     for (uint32_t j = 0; j < sourceTriangles.getSize(); j++) {
       uint32_t* indices = sourceTriangles[j].vertexIndices;
 
-      uint32_t aIndex =
-          getMidpoint((Pair<uint32_t>){indices[0], indices[1]}, vertexBuffer, midpointBuffer);
-      uint32_t bIndex =
-          getMidpoint((Pair<uint32_t>){indices[1], indices[2]}, vertexBuffer, midpointBuffer);
-      uint32_t cIndex =
-          getMidpoint((Pair<uint32_t>){indices[2], indices[0]}, vertexBuffer, midpointBuffer);
+      uint32_t aIndex = getMidpoint({indices[0], indices[1]}, vertexBuffer, midpointBuffer);
+      uint32_t bIndex = getMidpoint({indices[1], indices[2]}, vertexBuffer, midpointBuffer);
+      uint32_t cIndex = getMidpoint({indices[2], indices[0]}, vertexBuffer, midpointBuffer);
 
-      targetTriangles.push((Triangle){indices[0], aIndex, cIndex});
-      targetTriangles.push((Triangle){indices[1], bIndex, aIndex});
-      targetTriangles.push((Triangle){indices[2], cIndex, bIndex});
-      targetTriangles.push((Triangle){aIndex, bIndex, cIndex});
+      targetTriangles.push({indices[0], aIndex, cIndex});
+      targetTriangles.push({indices[1], bIndex, aIndex});
+      targetTriangles.push({indices[2], cIndex, bIndex});
+      targetTriangles.push({aIndex, bIndex, cIndex});
     }
 
     sourceTriangles.clear();
@@ -168,25 +160,14 @@ Mesh* createIcosphere(const float size, const uint32_t subdivisions) {
     }
   }
 
-  Buffer<Edge> edgeBuffer(edgeCount);
-  for (uint32_t i = 0; i < targetTriangles.getSize(); i++) {
-    uint32_t* indices = targetTriangles[i].vertexIndices;
-    addEdge((Edge){indices[0], indices[1]}, edgeBuffer);
-    addEdge((Edge){indices[1], indices[2]}, edgeBuffer);
-    addEdge((Edge){indices[2], indices[0]}, edgeBuffer);
-  }
-
-  Edge edges[edgeBuffer.getSize()];
-  std::copy(edgeBuffer.getElements(), edgeBuffer.getElements() + edgeBuffer.getSize(), edges);
-
   Vector3 vertices[vertexBuffer.getSize()];
   std::copy(vertexBuffer.getElements(), vertexBuffer.getElements() + vertexBuffer.getSize(),
             vertices);
 
-  Face faces[sourceTriangles.getSize()];
+  FaceDefinition faces[sourceTriangles.getSize()];
   for (uint32_t i = 0; i < sourceTriangles.getSize(); i++) {
     uint32_t* indices = sourceTriangles[i].vertexIndices;
-    faces[i] = (Face){indices[0], indices[1], indices[2]};
+    faces[i] = {indices[0], indices[1], indices[2]};
   }
 
   Mesh* mesh = new Mesh(vertices, vertexBuffer.getSize(), faces, sourceTriangles.getSize());

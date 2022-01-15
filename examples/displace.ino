@@ -13,7 +13,7 @@ voltage::FreeCamera camera;
 void setup() {
   // Copy the original icosphere coordinates
   for (unsigned int i = 0; i < mesh->vertexCount; i++) {
-    vertices[i] = mesh->vertices[i];
+    vertices[i] = mesh->vertices[i].original;
   }
 
   camera.setTranslation(0, 0, 5.0);
@@ -26,7 +26,7 @@ void loop() {
     float scale = sin(((phase * 3.0) + vertices[i].x + vertices[i].y) * 3.0) * 0.5 + 1.0;
 
     // Scale the original coordinate
-    mesh->vertices[i] = Vector3Scale(vertices[i], scale);
+    mesh->vertices[i].original = Vector3Scale(vertices[i], scale);
   }
 
   object->setRotation(0, 0, phase);

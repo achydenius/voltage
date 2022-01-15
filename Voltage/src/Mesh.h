@@ -9,22 +9,40 @@
 #include <initializer_list>
 
 #include "Array.h"
-#include "raymath.h"
 #include "types.h"
+#include "utils.h"
 
 namespace voltage {
 
-struct Vertex {
+class Vertex {
+ public:
   Vector3 original;
   Vector4 transformed;
   bool isVisible;
+
+  void perspectiveDivide() {
+    transformed.x /= transformed.w;
+    transformed.y /= transformed.w;
+  }
 };
 
-struct Face {
+class Face {
+ public:
   Vertex** vertices;
   uint32_t vertexCount;
   Vector3 normal;
   bool isVisible;
+
+  float getNormalAngle(const Vector3& vector) {
+    Vector3 view = Vector3Subtract(vector, vertices[0]->original);
+    return Vector3DotProduct(view, normal);
+  }
+
+  void setVerticesVisible(bool isVisible) {
+    for (uint32_t i = 0; i < vertexCount; i++) {
+      vertices[i]->isVisible = isVisible;
+    }
+  }
 };
 
 struct Edge {
@@ -62,6 +80,17 @@ class Mesh {
   ~Mesh();
 
   void scale(const float value);
+  void transformVertices(const Matrix& matrix) {
+    for (uint32_t i = 0; i < vertexCount; i++) {
+      Vector3& original = vertices[i].original;
+      vertices[i].transformed = Vector4Transform({original.x, original.y, original.z, 1.0}, matrix);
+    }
+  }
+  void setVerticesVisible(bool isVisible) {
+    for (uint32_t i = 0; i < vertexCount; i++) {
+      vertices[i].isVisible = isVisible;
+    }
+  }
 
  private:
   Edge* findEdge(const Pair<Vertex*>& vertex, const Buffer<Edge>& edges);

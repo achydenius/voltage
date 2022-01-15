@@ -32,28 +32,23 @@ void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
 }
 
 void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
-  Matrix modelViewMatrix = MatrixMultiply(object->getModelMatrix(), viewMatrix);
-
   Mesh* mesh = object->mesh;
 
   // Transform camera to model space and perform face culling
+  // If culling is disabled, mark all faces and vertices visible
   TIMER_START(faceCulling);
-
-  for (uint32_t i = 0; i < mesh->vertexCount; i++) {
-    mesh->vertices[i].isVisible = false;
-  }
-
+  Matrix modelViewMatrix = MatrixMultiply(object->getModelMatrix(), viewMatrix);
   Matrix viewModelMatrix = MatrixInvert(modelViewMatrix);
-  Vector3 camera = Vector3Transform({0, 0, 0}, viewModelMatrix);
+  Vector3 cameraPosition = Vector3Transform({0, 0, 0}, viewModelMatrix);
+
+  mesh->setVerticesVisible(false);
 
   for (uint32_t i = 0; i < mesh->faceCount; i++) {
     Face& face = mesh->faces[i];
     if (object->faceCulling == None) {
       face.isVisible = true;
     } else {
-      Vector3 vertex = face.vertices[0]->original;
-      Vector3 view = Vector3Subtract(camera, vertex);
-      float angle = Vector3DotProduct(view, face.normal);
+      float angle = face.getNormalAngle(cameraPosition);
 
       if (object->faceCulling == Front) {
         face.isVisible = angle < 0;
@@ -63,9 +58,7 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
     }
 
     if (face.isVisible) {
-      for (uint32_t j = 0; j < face.vertexCount; j++) {
-        face.vertices[j]->isVisible = true;
-      }
+      face.setVerticesVisible(true);
     }
   }
   TIMER_STOP(faceCulling);
@@ -73,12 +66,7 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
   // Transform to clip space
   TIMER_START(transform);
   Matrix modelViewProjectionMatrix = MatrixMultiply(modelViewMatrix, projectionMatrix);
-
-  for (uint32_t i = 0; i < mesh->vertexCount; i++) {
-    Vector3& vertex = mesh->vertices[i].original;
-    mesh->vertices[i].transformed =
-        Vector4Transform({vertex.x, vertex.y, vertex.z, 1.0}, modelViewProjectionMatrix);
-  }
+  mesh->transformVertices(modelViewProjectionMatrix);
   TIMER_STOP(transform);
 
   // Clip lines against near plane
@@ -110,11 +98,11 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
       case Inside:
         break;
       case AClipped:
-        clippedVertices.push((Vertex){{0}, a, true});
+        clippedVertices.push({{0}, a, true});
         ap = &clippedVertices.getLast();
         break;
       case BClipped:
-        clippedVertices.push((Vertex){{0}, b, true});
+        clippedVertices.push({{0}, b, true});
         bp = &clippedVertices.getLast();
         break;
     }
@@ -124,19 +112,16 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
   }
   TIMER_STOP(nearClip);
 
-  // Project vertices
+  // Perspective divide visible original and clipper-generated vertices
   TIMER_START(transform);
   for (uint32_t i = 0; i < mesh->vertexCount; i++) {
     Vertex& vertex = mesh->vertices[i];
     if (vertex.isVisible) {
-      vertex.transformed.x /= vertex.transformed.w;
-      vertex.transformed.y /= vertex.transformed.w;
+      vertex.perspectiveDivide();
     }
   }
   for (uint32_t i = 0; i < clippedVertices.getSize(); i++) {
-    Vector4& transformed = clippedVertices[i].transformed;
-    transformed.x /= transformed.w;
-    transformed.y /= transformed.w;
+    clippedVertices[i].perspectiveDivide();
   }
   TIMER_STOP(transform);
 

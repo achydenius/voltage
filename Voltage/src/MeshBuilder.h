@@ -74,7 +74,7 @@ uint32_t getMidpoint(const Pair<uint32_t>& indices, Buffer<Vector3>& vertexBuffe
   uint32_t index = vertexBuffer.getSize();
 
   vertexBuffer.push(Vector3Normalize(midpoint));
-  midpointBuffer.push((EdgeMidpoint){indices.a, indices.b, index});
+  midpointBuffer.push({indices.a, indices.b, index});
 
   return index;
 }
@@ -144,17 +144,14 @@ Mesh* createIcosphere(const float size, const uint32_t subdivisions) {
     for (uint32_t j = 0; j < sourceTriangles.getSize(); j++) {
       uint32_t* indices = sourceTriangles[j].vertexIndices;
 
-      uint32_t aIndex =
-          getMidpoint((Pair<uint32_t>){indices[0], indices[1]}, vertexBuffer, midpointBuffer);
-      uint32_t bIndex =
-          getMidpoint((Pair<uint32_t>){indices[1], indices[2]}, vertexBuffer, midpointBuffer);
-      uint32_t cIndex =
-          getMidpoint((Pair<uint32_t>){indices[2], indices[0]}, vertexBuffer, midpointBuffer);
+      uint32_t aIndex = getMidpoint({indices[0], indices[1]}, vertexBuffer, midpointBuffer);
+      uint32_t bIndex = getMidpoint({indices[1], indices[2]}, vertexBuffer, midpointBuffer);
+      uint32_t cIndex = getMidpoint({indices[2], indices[0]}, vertexBuffer, midpointBuffer);
 
-      targetTriangles.push((Triangle){indices[0], aIndex, cIndex});
-      targetTriangles.push((Triangle){indices[1], bIndex, aIndex});
-      targetTriangles.push((Triangle){indices[2], cIndex, bIndex});
-      targetTriangles.push((Triangle){aIndex, bIndex, cIndex});
+      targetTriangles.push({indices[0], aIndex, cIndex});
+      targetTriangles.push({indices[1], bIndex, aIndex});
+      targetTriangles.push({indices[2], cIndex, bIndex});
+      targetTriangles.push({aIndex, bIndex, cIndex});
     }
 
     sourceTriangles.clear();

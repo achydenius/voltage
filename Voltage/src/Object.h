@@ -21,10 +21,10 @@ class Object {
     setScaling(1.0);
   };
 
-  void setRotation(float x, float y, float z) { rotation = (Vector3){x, y, z}; }
-  void setTranslation(float x, float y, float z) { translation = (Vector3){x, y, z}; }
-  void setScaling(float x, float y, float z) { scaling = (Vector3){x, y, z}; }
-  void setScaling(float scale) { scaling = (Vector3){scale, scale, scale}; }
+  void setRotation(float x, float y, float z) { rotation = {x, y, z}; }
+  void setTranslation(float x, float y, float z) { translation = {x, y, z}; }
+  void setScaling(float x, float y, float z) { scaling = {x, y, z}; }
+  void setScaling(float scale) { scaling = {scale, scale, scale}; }
 
   Matrix& getModelMatrix() {
     Matrix scale = MatrixScale(scaling.x, scaling.y, scaling.z);

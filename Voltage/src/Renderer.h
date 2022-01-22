@@ -14,6 +14,10 @@ class Renderer {
  public:
   virtual ~Renderer(){};
   virtual void add(const Array<Object*>& objects, Camera& camera) = 0;
+
+ protected:
+  void cullFaces(Mesh* mesh, const Matrix& modelViewMatrix, const FaceCulling culling);
+  void clipNear(Mesh* mesh, Buffer<Vertex>& clippedVertices);
 };
 
 class LineRenderer : public Renderer {

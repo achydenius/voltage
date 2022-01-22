@@ -14,32 +14,9 @@ TIMER_CREATE(nearClip);
 TIMER_CREATE(viewportClip);
 TIMER_CREATE(faceCulling);
 
-void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
-  Matrix viewMatrix = camera.getViewMatrix();
-  Matrix projectionMatrix = camera.getProjectionMatrix();
-
-  for (uint32_t i = 0; i < objects.getCapacity(); i++) {
-    add(objects[i], viewMatrix, projectionMatrix);
-  }
-
-  TIMER_SAVE(transform);
-  TIMER_SAVE(nearClip);
-  TIMER_SAVE(viewportClip);
-  TIMER_SAVE(faceCulling);
-
-  TIMER_PRINT(transform);
-  TIMER_PRINT(nearClip);
-  TIMER_PRINT(viewportClip);
-  TIMER_PRINT(faceCulling);
-}
-
-void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
-  Mesh* mesh = object->mesh;
-
+void Renderer::cullFaces(Mesh* mesh, const Matrix& modelViewMatrix, const FaceCulling culling) {
   // Transform camera to model space and perform face culling
-  // If culling is disabled, mark all faces and vertices visible
   TIMER_START(faceCulling);
-  Matrix modelViewMatrix = MatrixMultiply(object->getModelMatrix(), viewMatrix);
   Matrix viewModelMatrix = MatrixInvert(modelViewMatrix);
   Vector3 cameraPosition = Vector3Transform({0, 0, 0}, viewModelMatrix);
 
@@ -47,16 +24,12 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
 
   for (uint32_t i = 0; i < mesh->faceCount; i++) {
     Face& face = mesh->faces[i];
-    if (object->faceCulling == None) {
-      face.isVisible = true;
-    } else {
-      float angle = face.getNormalAngle(cameraPosition);
 
-      if (object->faceCulling == Front) {
-        face.isVisible = angle < 0;
-      } else {
-        face.isVisible = angle > 0;
-      }
+    float angle = face.getNormalAngle(cameraPosition);
+    if (culling == Front) {
+      face.isVisible = angle < 0;
+    } else {
+      face.isVisible = angle > 0;
     }
 
     if (face.isVisible) {
@@ -64,18 +37,14 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
     }
   }
   TIMER_STOP(faceCulling);
+}
 
-  // Transform to clip space
-  TIMER_START(transform);
-  Matrix modelViewProjectionMatrix = MatrixMultiply(modelViewMatrix, projectionMatrix);
-  mesh->transformVertices(modelViewProjectionMatrix);
-  TIMER_STOP(transform);
-
+void Renderer::clipNear(Mesh* mesh, Buffer<Vertex>& clippedVertices) {
   // Clip lines against near plane
   // TODO: Do all clipping in clip space?
+  TIMER_START(nearClip);
   clippedVertices.clear();
 
-  TIMER_START(nearClip);
   for (uint32_t i = 0; i < mesh->edgeCount; i++) {
     Edge& edge = mesh->edges[i];
     Vertex* ap = edge.vertices.a;
@@ -113,6 +82,46 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
     edge.isVisible = true;
   }
   TIMER_STOP(nearClip);
+}
+
+void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
+  Matrix viewMatrix = camera.getViewMatrix();
+  Matrix projectionMatrix = camera.getProjectionMatrix();
+
+  for (uint32_t i = 0; i < objects.getCapacity(); i++) {
+    add(objects[i], viewMatrix, projectionMatrix);
+  }
+
+  TIMER_SAVE(transform);
+  TIMER_SAVE(nearClip);
+  TIMER_SAVE(viewportClip);
+  TIMER_SAVE(faceCulling);
+
+  TIMER_PRINT(transform);
+  TIMER_PRINT(nearClip);
+  TIMER_PRINT(viewportClip);
+  TIMER_PRINT(faceCulling);
+}
+
+void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
+  Mesh* mesh = object->mesh;
+
+  // Cull faces in model coordinate space
+  Matrix modelViewMatrix = MatrixMultiply(object->getModelMatrix(), viewMatrix);
+  if (object->faceCulling != None) {
+    cullFaces(mesh, modelViewMatrix, object->faceCulling);
+  } else {
+    mesh->setVerticesVisible(true);
+  }
+
+  // Transform visible vertices to clip coordinate space
+  TIMER_START(transform);
+  Matrix modelViewProjectionMatrix = MatrixMultiply(modelViewMatrix, projectionMatrix);
+  mesh->transformVisibleVertices(modelViewProjectionMatrix);
+  TIMER_STOP(transform);
+
+  // Clip visible lines against near plane
+  clipNear(mesh, clippedVertices);
 
   // Perspective divide visible original and clipper-generated vertices
   TIMER_START(transform);

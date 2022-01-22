@@ -86,6 +86,15 @@ class Mesh {
       vertices[i].transformed = Vector4Transform({original.x, original.y, original.z, 1.0}, matrix);
     }
   }
+  void transformVisibleVertices(const Matrix& matrix) {
+    for (uint32_t i = 0; i < vertexCount; i++) {
+      Vertex& vertex = vertices[i];
+      if (vertices[i].isVisible) {
+        Vector3& original = vertex.original;
+        vertex.transformed = Vector4Transform({original.x, original.y, original.z, 1.0}, matrix);
+      }
+    }
+  }
   void setVerticesVisible(bool isVisible) {
     for (uint32_t i = 0; i < vertexCount; i++) {
       vertices[i].isVisible = isVisible;

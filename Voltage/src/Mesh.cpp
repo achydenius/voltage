@@ -4,8 +4,40 @@
 
 namespace voltage {
 
+Mesh::Mesh(const Vector3* vertices, const uint32_t vertexCount, const FaceDefinition* faces,
+           const uint32_t faceCount) {
+  setupVerticesAndFaces(vertices, vertexCount, faces, faceCount);
+  generateEdges();
+  addFaceToEdgePointers();
+}
+
 Mesh::Mesh(const Vector3* sourceVertices, const uint32_t sourceVertexCount,
-           const FaceDefinition* sourceFaces, const uint32_t sourceFaceCount) {
+           const FaceDefinition* sourceFaces, const uint32_t sourceFaceCount,
+           const EdgeDefinition* sourceEdges, const uint32_t sourceEdgeCount) {
+  setupVerticesAndFaces(sourceVertices, sourceVertexCount, sourceFaces, sourceFaceCount);
+
+  edgeCount = sourceEdgeCount;
+  edges = new Edge[edgeCount];
+
+  for (uint32_t i = 0; i < sourceEdgeCount; i++) {
+    const EdgeDefinition& edge = sourceEdges[i];
+    edges[i].vertices = {&vertices[edge.vertexIndices.a], &vertices[edge.vertexIndices.b]};
+    edges[i].faces.a = edge.faceIndices.a > -1 ? &faces[edge.faceIndices.a] : nullptr;
+    edges[i].faces.b = edge.faceIndices.b > -1 ? &faces[edge.faceIndices.b] : nullptr;
+  }
+
+  addFaceToEdgePointers();
+}
+
+Mesh::~Mesh() {
+  delete vertices;
+  delete edges;
+  delete faces;
+}
+
+void Mesh::setupVerticesAndFaces(const Vector3* sourceVertices, const uint32_t sourceVertexCount,
+                                 const FaceDefinition* sourceFaces,
+                                 const uint32_t sourceFaceCount) {
   vertexCount = sourceVertexCount;
   faceCount = sourceFaceCount;
 
@@ -27,14 +59,7 @@ Mesh::Mesh(const Vector3* sourceVertices, const uint32_t sourceVertexCount,
     }
   }
 
-  generateEdges();
   generateNormals();
-}
-
-Mesh::~Mesh() {
-  delete vertices;
-  delete edges;
-  delete faces;
 }
 
 void Mesh::scale(const float value) {
@@ -84,6 +109,32 @@ void Mesh::generateNormals() {
     Vector3 b = Vector3Subtract(face.vertices[2]->original, face.vertices[0]->original);
     Vector3 normal = Vector3CrossProduct(a, b);
     face.normal = Vector3Normalize(normal);
+  }
+}
+
+void Mesh::addFaceToEdgePointers() {
+  Buffer<Edge*> edgePointers(VOLTAGE_MESH_MAX_EDGES);
+
+  for (uint32_t i = 0; i < faceCount; i++) {
+    Face& face = faces[i];
+    edgePointers.clear();
+
+    for (uint32_t j = 0; j < edgeCount; j++) {
+      Edge& edge = edges[j];
+
+      if (edge.faces.a == &face) {
+        edgePointers.push(&edge);
+      } else if (edge.faces.b == &face) {
+        edgePointers.push(&edge);
+      }
+    }
+
+    face.edgeCount = edgePointers.getSize();
+    if (edgePointers.getSize() > 0) {
+      face.edges = new Edge*[edgePointers.getSize()];
+      std::copy(edgePointers.getElements(), edgePointers.getElements() + edgePointers.getSize(),
+                face.edges);
+    }
   }
 }
 

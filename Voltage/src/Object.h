@@ -21,6 +21,8 @@ class Object {
     setScaling(1.0);
   };
 
+  Object() : Object(nullptr) {}
+
   void setRotation(float x, float y, float z) { rotation = {x, y, z}; }
   void setTranslation(float x, float y, float z) { translation = {x, y, z}; }
   void setScaling(float x, float y, float z) { scaling = {x, y, z}; }

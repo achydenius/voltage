@@ -34,7 +34,7 @@ void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
 void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
   Mesh* mesh = object->mesh;
 
-  // Transform camera to model space and perform face culling
+  // Transform camera to model space and perform face culling.
   // If culling is disabled, mark all faces and vertices visible
   TIMER_START(faceCulling);
   Matrix modelViewMatrix = MatrixMultiply(object->getModelMatrix(), viewMatrix);
@@ -57,16 +57,17 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
       }
     }
 
-    if (face.isVisible) {
-      face.setVerticesVisible(true);
+    for (uint32_t j = 0; j < face.edgeCount; j++) {
+      face.edges[j]->vertices.a->isVisible = true;
+      face.edges[j]->vertices.b->isVisible = true;
     }
   }
   TIMER_STOP(faceCulling);
 
-  // Transform to clip space
+  // Transform visible vertices (i.e. the ones being part of a potentially visible edge)
   TIMER_START(transform);
   Matrix modelViewProjectionMatrix = MatrixMultiply(modelViewMatrix, projectionMatrix);
-  mesh->transformVertices(modelViewProjectionMatrix);
+  mesh->transformVisibleVertices(modelViewProjectionMatrix);
   TIMER_STOP(transform);
 
   // Clip lines against near plane
@@ -81,7 +82,7 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
 
     edge.isVisible = false;
 
-    if (!ap->isVisible || !bp->isVisible) {
+    if (!edge.faces.a->isVisible && (edge.faces.b == nullptr || !edge.faces.b->isVisible)) {
       continue;
     }
 
@@ -92,8 +93,6 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
 
     switch (clipResult) {
       case Outside:
-        ap->isVisible = false;
-        bp->isVisible = false;
         continue;
       case Inside:
         break;
@@ -107,12 +106,14 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
         break;
     }
 
+    ap->isVisible = true;
+    bp->isVisible = true;
     edge.clipped = {ap, bp};
     edge.isVisible = true;
   }
   TIMER_STOP(nearClip);
 
-  // Perspective divide visible original and clipper-generated vertices
+  // Perspective divide visible both original and clipper-generated vertices
   TIMER_START(transform);
   for (uint32_t i = 0; i < mesh->vertexCount; i++) {
     Vertex& vertex = mesh->vertices[i];

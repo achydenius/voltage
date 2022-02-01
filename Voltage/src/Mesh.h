@@ -26,10 +26,19 @@ class Vertex {
   }
 };
 
+struct Edge {
+  Pair<Vertex*> vertices;
+  Pair<struct Face*> faces;
+  Pair<Vertex*> clipped;
+  bool isVisible;
+};
+
 class Face {
  public:
   Vertex** vertices;
   uint32_t vertexCount;
+  Edge** edges;
+  uint32_t edgeCount;
   Vector3 normal;
   bool isVisible;
 
@@ -43,13 +52,6 @@ class Face {
       vertices[i]->isVisible = isVisible;
     }
   }
-};
-
-struct Edge {
-  Pair<Vertex*> vertices;
-  Pair<Face*> faces;
-  Pair<Vertex*> clipped;
-  bool isVisible;
 };
 
 class FaceDefinition {
@@ -66,6 +68,14 @@ class FaceDefinition {
   }
 };
 
+class EdgeDefinition {
+ public:
+  Pair<uint32_t> vertexIndices;
+  // An edge can belong to one or two faces.
+  // The former case can is denoted by setting the b index as -1
+  Pair<int32_t> faceIndices;
+};
+
 class Mesh {
  public:
   uint32_t vertexCount;
@@ -77,13 +87,19 @@ class Mesh {
 
   Mesh(const Vector3* vertices, const uint32_t vertexCount, const FaceDefinition* faces,
        const uint32_t faceCount);
+  Mesh(const Vector3* vertices, const uint32_t vertexCount, const FaceDefinition* faces,
+       const uint32_t faceCount, const EdgeDefinition* edges, const uint32_t edgeCount);
+
   ~Mesh();
 
   void scale(const float value);
-  void transformVertices(const Matrix& matrix) {
+  void transformVisibleVertices(const Matrix& matrix) {
     for (uint32_t i = 0; i < vertexCount; i++) {
-      Vector3& original = vertices[i].original;
-      vertices[i].transformed = Vector4Transform({original.x, original.y, original.z, 1.0}, matrix);
+      if (vertices[i].isVisible) {
+        Vector3& original = vertices[i].original;
+        vertices[i].transformed =
+            Vector4Transform({original.x, original.y, original.z, 1.0}, matrix);
+      }
     }
   }
   void setVerticesVisible(bool isVisible) {
@@ -93,9 +109,12 @@ class Mesh {
   }
 
  private:
+  void setupVerticesAndFaces(const Vector3* vertices, const uint32_t vertexCount,
+                             const FaceDefinition* faces, const uint32_t faceCount);
   Edge* findEdge(const Pair<Vertex*>& vertex, const Buffer<Edge>& edges);
   void generateEdges();
   void generateNormals();
+  void addFaceToEdgePointers();
 };
 
 };  // namespace voltage

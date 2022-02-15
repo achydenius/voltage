@@ -11,22 +11,16 @@ namespace voltage {
 class Engine;
 
 class Renderer {
- public:
-  virtual ~Renderer(){};
-  virtual void add(const Array<Object*>& objects, Camera& camera) = 0;
-};
-
-class LineRenderer : public Renderer {
   Engine* engine;
   Buffer<Vertex> clippedVertices;
 
  public:
-  LineRenderer(Engine* engine, uint32_t maxLines) : engine(engine), clippedVertices(maxLines) {}
+  Renderer(Engine* engine, uint32_t maxLines) : engine(engine), clippedVertices(maxLines) {}
 
-  void add(const Array<Object*>& objects, Camera& camera);
+  void render(const Array<Object*>& objects, Camera& camera);
 
  private:
-  void add(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
+  void render(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
 };
 
 }  // namespace voltage

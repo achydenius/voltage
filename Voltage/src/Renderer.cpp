@@ -9,29 +9,26 @@ using namespace voltage;
 
 TIMER_CREATE(transform);
 TIMER_CREATE(nearClip);
-TIMER_CREATE(viewportClip);
 TIMER_CREATE(faceCulling);
 
-void LineRenderer::add(const Array<Object*>& objects, Camera& camera) {
+void Renderer::render(const Array<Object*>& objects, Camera& camera) {
   Matrix viewMatrix = camera.getViewMatrix();
   Matrix projectionMatrix = camera.getProjectionMatrix();
 
   for (uint32_t i = 0; i < objects.getCapacity(); i++) {
-    add(objects[i], viewMatrix, projectionMatrix);
+    render(objects[i], viewMatrix, projectionMatrix);
   }
 
   TIMER_SAVE(transform);
   TIMER_SAVE(nearClip);
-  TIMER_SAVE(viewportClip);
   TIMER_SAVE(faceCulling);
 
   TIMER_PRINT(transform);
   TIMER_PRINT(nearClip);
-  TIMER_PRINT(viewportClip);
   TIMER_PRINT(faceCulling);
 }
 
-void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
+void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
   Mesh* mesh = object->mesh;
 
   // Transform camera to model space and perform face culling.
@@ -131,10 +128,8 @@ void LineRenderer::add(Object* object, const Matrix& viewMatrix, const Matrix& p
     Vector4& a = edge.clipped.a->transformed;
     Vector4& b = edge.clipped.b->transformed;
 
-    TIMER_START(viewportClip);
     if (edge.isVisible) {
       engine->add({{a.x, a.y}, {b.x, b.y}});
     }
-    TIMER_STOP(viewportClip);
   }
 }

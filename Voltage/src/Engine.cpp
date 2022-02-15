@@ -13,20 +13,9 @@ void Engine::clear() {
   points.clear();
 }
 
-void Engine::add(const Line2D& line) {
-  Vector2 a = line.a;
-  Vector2 b = line.b;
-  if (clipLine(a, b, viewport)) {
-    lines.push({a, b});
-  }
-}
+void Engine::add(const Line2D& line) { lines.push(line); }
 
-void Engine::add(const Vector2& point) {
-  if (point.x >= viewport.left && point.x < viewport.right && point.y >= viewport.bottom &&
-      point.y < viewport.top) {
-    points.push(point);
-  }
-}
+void Engine::add(const Vector2& point) { points.push(point); }
 
 void Engine::add(Object* object, Camera& camera) {
   static Array<Object*> objects(1);
@@ -34,7 +23,9 @@ void Engine::add(Object* object, Camera& camera) {
   add(objects, camera);
 }
 
-void Engine::add(const Array<Object*>& objects, Camera& camera) { renderer->add(objects, camera); }
+void Engine::add(const Array<Object*>& objects, Camera& camera) {
+  renderer.render(objects, camera);
+}
 
 void Engine::addViewport() {
   Vector2 points[] = {
@@ -50,19 +41,45 @@ void Engine::addViewport() {
 }
 
 void Engine::render() {
-  TIMER_CREATE(render);
-  TIMER_START(render);
+  TIMER_CREATE(viewportClip);
+  TIMER_CREATE(rasterize);
+
+  TIMER_START(viewportClip);
+  clippedLines.clear();
   for (uint32_t i = 0; i < lines.getSize(); i++) {
-    rasterizer.drawLine(lines[i].a, lines[i].b);
+    Line2D line = lines[i];
+    Vector2 a = line.a;
+    Vector2 b = line.b;
+    if (clipLine(a, b, viewport)) {
+      clippedLines.push({a, b});
+    }
   }
 
+  clippedPoints.clear();
   for (uint32_t i = 0; i < points.getSize(); i++) {
-    rasterizer.drawPoint(points[i]);
+    Vector2 point = points[i];
+    if (point.x >= viewport.left && point.x < viewport.right && point.y >= viewport.bottom &&
+        point.y < viewport.top) {
+      clippedPoints.push({point.x, point.y});
+    }
   }
-  TIMER_STOP(render);
-  TIMER_SAVE(render);
+  TIMER_STOP(viewportClip);
 
-  TIMER_PRINT(render);
+  TIMER_START(rasterize);
+  for (uint32_t i = 0; i < clippedLines.getSize(); i++) {
+    rasterizer.drawLine(clippedLines[i].a, clippedLines[i].b);
+  }
+
+  for (uint32_t i = 0; i < clippedPoints.getSize(); i++) {
+    rasterizer.drawPoint(clippedPoints[i]);
+  }
+  TIMER_STOP(rasterize);
+
+  TIMER_SAVE(viewportClip);
+  TIMER_SAVE(rasterize);
+
+  TIMER_PRINT(viewportClip);
+  TIMER_PRINT(rasterize);
 
   // Move beam to blanking point (i.e. outside the screen) when finished drawing
   rasterizer.drawPoint(blankingPoint);

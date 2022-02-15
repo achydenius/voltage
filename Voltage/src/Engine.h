@@ -14,10 +14,12 @@ namespace voltage {
 class Engine {
   static const uint32_t defaultMaxLines = 1000;
   static const uint32_t defaultMaxPoints = 1000;
-  Renderer* renderer;
+  Renderer renderer;
   const Rasterizer rasterizer;
   Buffer<Line2D> lines;
   Buffer<Vector2> points;
+  Buffer<Line2D> clippedLines;
+  Buffer<Vector2> clippedPoints;
 
   Viewport viewport = {-1.0, 1.0, 0.75, -0.75};
   Vector2 blankingPoint = {1.0, 1.0};
@@ -25,10 +27,12 @@ class Engine {
  public:
   Engine(uint8_t resolutionBits, uint32_t maxLines = defaultMaxLines,
          uint32_t maxPoints = defaultMaxPoints)
-      : rasterizer(resolutionBits), lines(maxLines), points(maxPoints) {
-    renderer = new LineRenderer(this, maxLines);
-  }
-  ~Engine() { delete renderer; };
+      : renderer(this, maxLines),
+        rasterizer(resolutionBits),
+        lines(maxLines),
+        points(maxPoints),
+        clippedLines(maxLines),
+        clippedPoints(maxPoints) {}
 
   void setViewport(const Viewport& viewport);
   void setBlankingPoint(const Vector2& blankingPoint);

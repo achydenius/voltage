@@ -17,7 +17,7 @@ Development is currently being done with [Teensy 3.6](https://www.pjrc.com/store
 The rendering loop consists of three phases:
 
 1. Clear `Engine`'s internal buffers with `clear` method call
-2. Add geometry to be rendered with `addLine`, `addPoint` and `addObject` methods
+2. Add geometry to be rendered with the overloaded `add` method
 3. Render all the added geometry with `render` method call
 
 The preferred rendering resolution is defined when instantiating the engine. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
@@ -39,8 +39,8 @@ float phase = 0;
 void loop() {
   engine.clear();
   engine.add({
-    { cosf(phase) * 0.75, sinf(phase) * 0.75 },
-    { cosf(PI + phase) * 0.75, sinf(PI + phase) * 0.75 }
+    { cosf(phase), sinf(phase) },
+    { cosf(PI + phase), sinf(PI + phase) }
   });
   engine.render();
 
@@ -60,12 +60,11 @@ Mesh *mesh = MeshBuilder::createCube(1.0);
 Object *object = new Object(mesh);
 FreeCamera camera;
 
-void setup() {
-  camera.setTranslation(0, 0, 5.0);
-}
+void setup() {}
 
 float phase = 0;
 void loop() {
+  camera.setTranslation(0, 0, sin(phase) * 5.0);
   object->setRotation(phase, phase, 0);
 
   engine.clear();

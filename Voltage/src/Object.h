@@ -8,6 +8,30 @@ namespace voltage {
 
 enum FaceCulling { Front, Back, None };
 
+class Object2D {
+ public:
+  Line2D* lines;
+  float rotation;
+  Vector2 translation, scaling;
+  Matrix3 matrix;
+
+  Object2D(Line2D* lines) : lines(lines) {}
+
+  void setRotation(float angle) { rotation = angle; }
+  void setTranslation(float x, float y) { translation = {x, y}; }
+  void setScaling(float x, float y) { scaling = {x, y}; }
+  void setScaling(float scale) { scaling = {scale, scale}; }
+
+  Matrix3& getModelMatrix() {
+    Matrix3 scale = Matrix3Scale(scaling.x, scaling.y);
+    Matrix3 rotate = Matrix3Rotate(rotation);
+    Matrix3 translate = Matrix3Translate(translation.x, translation.y);
+    matrix = Matrix3Multiply(Matrix3Multiply(scale, rotate), translate);
+
+    return matrix;
+  }
+};
+
 class Object3D {
  public:
   Mesh* mesh;

@@ -17,13 +17,13 @@ void Engine::add(const Line2D& line) { lines.push(line); }
 
 void Engine::add(const Vector2& point) { points.push(point); }
 
-void Engine::add(Object* object, Camera& camera) {
-  static Array<Object*> objects(1);
+void Engine::add(Object3D* object, Camera& camera) {
+  static Array<Object3D*> objects(1);
   objects[0] = object;
   add(objects, camera);
 }
 
-void Engine::add(const Array<Object*>& objects, Camera& camera) {
+void Engine::add(const Array<Object3D*>& objects, Camera& camera) {
   renderer.render(objects, camera);
 }
 

@@ -39,8 +39,8 @@ class Engine {
   void clear();
   void add(const Line2D& line);
   void add(const Vector2& point);
-  void add(Object* object, Camera& camera);
-  void add(const Array<Object*>& objects, Camera& camera);
+  void add(Object3D* object, Camera& camera);
+  void add(const Array<Object3D*>& objects, Camera& camera);
   void addViewport();
   void render();
 };

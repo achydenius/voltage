@@ -8,20 +8,20 @@ namespace voltage {
 
 enum FaceCulling { Front, Back, None };
 
-class Object {
+class Object3D {
  public:
   Mesh* mesh;
   Vector3 rotation, translation, scaling;
   Matrix modelMatrix;
   FaceCulling faceCulling;
 
-  Object(Mesh* mesh) : mesh(mesh), faceCulling(None) {
+  Object3D(Mesh* mesh) : mesh(mesh), faceCulling(None) {
     setRotation(0, 0, 0);
     setTranslation(0, 0, 0);
     setScaling(1.0);
   };
 
-  Object() : Object(nullptr) {}
+  Object3D() : Object3D(nullptr) {}
 
   void setRotation(float x, float y, float z) { rotation = {x, y, z}; }
   void setTranslation(float x, float y, float z) { translation = {x, y, z}; }

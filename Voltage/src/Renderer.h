@@ -17,10 +17,10 @@ class Renderer {
  public:
   Renderer(Engine* engine, uint32_t maxLines) : engine(engine), clippedVertices(maxLines) {}
 
-  void render(const Array<Object*>& objects, Camera& camera);
+  void render(const Array<Object3D*>& objects, Camera& camera);
 
  private:
-  void render(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
+  void render(Object3D* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
 };
 
 }  // namespace voltage

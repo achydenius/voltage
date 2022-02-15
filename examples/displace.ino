@@ -3,7 +3,7 @@
 voltage::Engine engine(10);
 
 voltage::Mesh *mesh = voltage::MeshBuilder::createIcosphere(1.0, 3);
-voltage::Object *object = new voltage::Object(mesh);
+voltage::Object3D *object = new voltage::Object3D(mesh);
 
 // Create a vertex array for storing the original icosphere coordinates
 Vector3 *vertices = new Vector3[mesh->vertexCount];

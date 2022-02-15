@@ -11,7 +11,7 @@ TIMER_CREATE(transform);
 TIMER_CREATE(nearClip);
 TIMER_CREATE(faceCulling);
 
-void Renderer::render(const Array<Object*>& objects, Camera& camera) {
+void Renderer::render(const Array<Object3D*>& objects, Camera& camera) {
   Matrix viewMatrix = camera.getViewMatrix();
   Matrix projectionMatrix = camera.getProjectionMatrix();
 
@@ -28,7 +28,7 @@ void Renderer::render(const Array<Object*>& objects, Camera& camera) {
   TIMER_PRINT(faceCulling);
 }
 
-void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
+void Renderer::render(Object3D* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
   Mesh* mesh = object->mesh;
 
   // Transform camera to model space and perform face culling.

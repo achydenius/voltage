@@ -17,7 +17,7 @@ Development is currently being done with [Teensy 3.6](https://www.pjrc.com/store
 The rendering loop consists of three phases:
 
 1. Clear `Engine`'s internal buffers with `clear` method call
-2. Add geometry to be rendered with `addLine`, `addPoint` and `addObject` methods
+2. Add geometry to be rendered with `addLine`, `addPoint` and `addObject3D` methods
 3. Render all the added geometry with `render` method call
 
 The preferred rendering resolution is defined when instantiating the engine. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
@@ -48,7 +48,7 @@ void loop() {
 }
 ```
 
-### Draw an animated 3D cube using `Object` and `FreeCamera`:
+### Draw an animated 3D cube using `Object3D` and `FreeCamera`:
 
 ```cpp
 #include <Voltage.h>
@@ -57,7 +57,7 @@ using namespace voltage;
 
 Engine engine(10);
 Mesh *mesh = MeshBuilder::createCube(1.0);
-Object *object = new Object(mesh);
+Object3D *object = new Object3D(mesh);
 FreeCamera camera;
 
 void setup() {

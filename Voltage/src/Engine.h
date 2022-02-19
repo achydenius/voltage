@@ -43,6 +43,9 @@ class Engine {
   void add(const Array<Object*>& objects, Camera& camera);
   void addViewport();
   void render();
+  void render(Buffer<Line2D>& lines);
+  Buffer<Line2D> getLines();
+  Renderer& getRenderer();
 };
 
 }  // namespace voltage

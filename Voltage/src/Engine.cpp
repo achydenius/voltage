@@ -43,7 +43,7 @@ void Engine::addViewport() {
 TIMER_CREATE(viewportClip);
 TIMER_CREATE(rasterize);
 
-void Engine::render() {
+void Engine::render(Buffer<Line2D>& lines) {
   TIMER_START(viewportClip);
   clippedLines.clear();
   for (uint32_t i = 0; i < lines.getSize(); i++) {
@@ -84,3 +84,9 @@ void Engine::render() {
   // Move beam to blanking point (i.e. outside the screen) when finished drawing
   rasterizer.drawPoint(blankingPoint);
 }
+
+void Engine::render() { render(this->lines); }
+
+Buffer<Line2D> Engine::getLines() { return lines; }
+
+Renderer& Engine::getRenderer() { return renderer; }

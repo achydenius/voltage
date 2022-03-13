@@ -129,7 +129,7 @@ void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& pr
     Vector4& b = edge.clipped.b->transformed;
 
     if (edge.isVisible) {
-      engine->add({{a.x, a.y}, {b.x, b.y}});
+      engine->add({{a.x, a.y}, {b.x, b.y}, object->brightness});
     }
   }
 }

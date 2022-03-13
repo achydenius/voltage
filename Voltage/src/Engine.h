@@ -18,10 +18,10 @@ class Engine {
   const Rasterizer rasterizer;
   const Teensy36Writer lineWriter;
   const SingleDACWriter* brightnessWriter;
-  Buffer<Line2D> lines;
-  Buffer<Vector2> points;
-  Buffer<Line2D> clippedLines;
-  Buffer<Vector2> clippedPoints;
+  Buffer<Line> lines;
+  Buffer<Point> points;
+  Buffer<Line> clippedLines;
+  Buffer<Point> clippedPoints;
 
   Viewport viewport = {-1.0, 1.0, 0.75, -0.75};
   Vector2 blankingPoint = {1.0, 1.0};
@@ -40,12 +40,15 @@ class Engine {
   void setViewport(const Viewport& viewport);
   void setBlankingPoint(const Vector2& blankingPoint);
   void clear();
-  void add(const Line2D& line);
-  void add(const Vector2& point);
+  void add(const Line& line);
+  void add(const Point& point);
   void add(Object* object, Camera& camera);
   void add(const Array<Object*>& objects, Camera& camera);
   void addViewport();
   void render();
+
+ private:
+  inline uint32_t transformBrightness(float value) const;
 };
 
 }  // namespace voltage

@@ -10,10 +10,15 @@ struct Pair {
   T a, b;
 };
 
-template <typename T>
-using Line = Pair<T>;
+struct Point {
+  float x, y;
+  float brightness;
+};
 
-using Line2D = Pair<Vector2>;
+struct Line {
+  Vector2 a, b;
+  float brightness;
+};
 
 }  // namespace voltage
 

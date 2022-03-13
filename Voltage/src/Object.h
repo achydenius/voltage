@@ -7,6 +7,7 @@
 namespace voltage {
 
 enum FaceCulling { Front, Back, None };
+enum BrightnessMode { Manual };
 
 class Object {
  public:
@@ -14,8 +15,10 @@ class Object {
   Vector3 rotation, translation, scaling;
   Matrix modelMatrix;
   FaceCulling faceCulling;
+  BrightnessMode brightnessMode;
+  float brightness;
 
-  Object(Mesh* mesh) : mesh(mesh), faceCulling(None) {
+  Object(Mesh* mesh) : mesh(mesh), faceCulling(None), brightnessMode(Manual), brightness(1.0) {
     setRotation(0, 0, 0);
     setTranslation(0, 0, 0);
     setScaling(1.0);

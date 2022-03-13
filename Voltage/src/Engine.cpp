@@ -13,9 +13,9 @@ void Engine::clear() {
   points.clear();
 }
 
-void Engine::add(const Line2D& line) { lines.push(line); }
+void Engine::add(const Line& line) { lines.push(line); }
 
-void Engine::add(const Vector2& point) { points.push(point); }
+void Engine::add(const Point& point) { points.push(point); }
 
 void Engine::add(Object* object, Camera& camera) {
   static Array<Object*> objects(1);
@@ -36,7 +36,7 @@ void Engine::addViewport() {
   };
 
   for (uint32_t i = 0; i < 4; i++) {
-    add({points[i], points[(i + 1) % 4]});
+    add({points[i], points[(i + 1) % 4], 1.0});
   }
 }
 
@@ -47,31 +47,38 @@ void Engine::render() {
   TIMER_START(viewportClip);
   clippedLines.clear();
   for (uint32_t i = 0; i < lines.getSize(); i++) {
-    Line2D line = lines[i];
+    Line line = lines[i];
     Vector2 a = line.a;
     Vector2 b = line.b;
     if (clipLine(a, b, viewport)) {
-      clippedLines.push({a, b});
+      clippedLines.push({a, b, lines[i].brightness});
     }
   }
 
   clippedPoints.clear();
   for (uint32_t i = 0; i < points.getSize(); i++) {
-    Vector2 point = points[i];
+    Point point = points[i];
     if (point.x >= viewport.left && point.x < viewport.right && point.y >= viewport.bottom &&
         point.y < viewport.top) {
-      clippedPoints.push({point.x, point.y});
+      clippedPoints.push(point);
     }
   }
   TIMER_STOP(viewportClip);
 
   TIMER_START(rasterize);
   for (uint32_t i = 0; i < clippedLines.getSize(); i++) {
+    if (brightnessWriter != nullptr) {
+      brightnessWriter->write(transformBrightness(clippedLines[i].brightness));
+    }
+
     rasterizer.drawLine(clippedLines[i].a, clippedLines[i].b);
   }
 
   for (uint32_t i = 0; i < clippedPoints.getSize(); i++) {
-    rasterizer.drawPoint(clippedPoints[i]);
+    if (brightnessWriter != nullptr) {
+      brightnessWriter->write(transformBrightness(clippedPoints[i].brightness));
+    }
+    rasterizer.drawPoint({clippedPoints[i].x, clippedPoints[i].y});
   }
   TIMER_STOP(rasterize);
 
@@ -81,6 +88,14 @@ void Engine::render() {
   TIMER_PRINT(viewportClip);
   TIMER_PRINT(rasterize);
 
-  // Move beam to blanking point (i.e. outside the screen) when finished drawing
-  rasterizer.drawPoint(blankingPoint);
+  if (brightnessWriter != nullptr) {
+    brightnessWriter->write(4095);
+  } else {
+    // Move beam to blanking point (i.e. outside the screen) when finished drawing
+    rasterizer.drawPoint(blankingPoint);
+  }
 }
+
+uint32_t Engine::transformBrightness(float value) const {
+  return (uint32_t)((1.0 - value) * 4095.0);
+};

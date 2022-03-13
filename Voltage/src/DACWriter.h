@@ -6,6 +6,7 @@
 #define __MK66FX1M0__
 #endif
 #include <Arduino.h>
+#include <SPI.h>
 
 namespace voltage {
 
@@ -33,6 +34,46 @@ class Teensy36Writer : public DualDACWriter {
     SIM_SCGC2 |= SIM_SCGC2_DAC1;
     DAC1_C0 = DAC_C0_DACEN | DAC_C0_DACRFS;  // 3.3V VDDA is DACREF_2
     *(volatile aliased_int16_t *)&(DAC1_DAT0L) = b;
+  }
+};
+
+class MCP4922Writer : public SingleDACWriter, public DualDACWriter {
+  static const uint16_t channel1Mask = 0b0111000000000000;
+  static const uint16_t channel2Mask = 0b1111000000000000;
+  static const uint32_t transferSpeed = 20000000;
+  const uint32_t selectPin;
+
+ public:
+  MCP4922Writer(uint32_t selectPin = 10) : selectPin(selectPin) {
+    pinMode(selectPin, OUTPUT);
+    SPI.begin();
+  }
+
+  inline void write(uint32_t value) const {
+    SPI.beginTransaction(SPISettings(transferSpeed, MSBFIRST, SPI_MODE0));
+
+    digitalWriteFast(selectPin, LOW);
+    SPI.transfer16(channel1Mask | value);
+    digitalWriteFast(selectPin, HIGH);
+    __asm("nop");
+
+    SPI.endTransaction();
+  }
+
+  inline void write(uint32_t a, uint32_t b) const {
+    SPI.beginTransaction(SPISettings(transferSpeed, MSBFIRST, SPI_MODE0));
+
+    digitalWriteFast(selectPin, LOW);
+    SPI.transfer16(channel1Mask | a);
+    digitalWriteFast(selectPin, HIGH);
+    __asm__("nop");
+
+    digitalWriteFast(selectPin, LOW);
+    SPI.transfer16(channel2Mask | b);
+    digitalWriteFast(selectPin, HIGH);
+    __asm__("nop");
+
+    SPI.endTransaction();
   }
 };
 

@@ -16,7 +16,8 @@ class Engine {
   static const uint32_t defaultMaxPoints = 1000;
   Renderer renderer;
   const Rasterizer rasterizer;
-  const Teensy36Writer dacWriter;
+  const Teensy36Writer lineWriter;
+  const SingleDACWriter* brightnessWriter;
   Buffer<Line2D> lines;
   Buffer<Vector2> points;
   Buffer<Line2D> clippedLines;
@@ -26,10 +27,11 @@ class Engine {
   Vector2 blankingPoint = {1.0, 1.0};
 
  public:
-  Engine(uint8_t resolutionBits, uint32_t maxLines = defaultMaxLines,
-         uint32_t maxPoints = defaultMaxPoints)
+  Engine(uint8_t resolutionBits, SingleDACWriter* brightnessWriter = nullptr,
+         uint32_t maxLines = defaultMaxLines, uint32_t maxPoints = defaultMaxPoints)
       : renderer(this, maxLines),
-        rasterizer(dacWriter, resolutionBits),
+        rasterizer(lineWriter, resolutionBits),
+        brightnessWriter(brightnessWriter),
         lines(maxLines),
         points(maxPoints),
         clippedLines(maxLines),

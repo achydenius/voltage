@@ -16,6 +16,7 @@ class Engine {
   static const uint32_t defaultMaxPoints = 1000;
   Renderer renderer;
   const Rasterizer rasterizer;
+  const Teensy36Writer dacWriter;
   Buffer<Line2D> lines;
   Buffer<Vector2> points;
   Buffer<Line2D> clippedLines;
@@ -28,7 +29,7 @@ class Engine {
   Engine(uint8_t resolutionBits, uint32_t maxLines = defaultMaxLines,
          uint32_t maxPoints = defaultMaxPoints)
       : renderer(this, maxLines),
-        rasterizer(resolutionBits),
+        rasterizer(dacWriter, resolutionBits),
         lines(maxLines),
         points(maxPoints),
         clippedLines(maxLines),

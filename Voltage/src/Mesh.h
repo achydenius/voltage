@@ -31,6 +31,7 @@ struct Edge {
   Pair<struct Face*> faces;
   Pair<Vertex*> clipped;
   bool isVisible;
+  bool isCulled;
 };
 
 class Face {

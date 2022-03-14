@@ -42,16 +42,11 @@ void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& pr
 
   for (uint32_t i = 0; i < mesh->faceCount; i++) {
     Face& face = mesh->faces[i];
-    if (object->faceCulling == None) {
+    if (object->culling == Culling::None) {
       face.isVisible = true;
     } else {
       float angle = face.getNormalAngle(cameraPosition);
-
-      if (object->faceCulling == Front) {
-        face.isVisible = angle < 0;
-      } else {
-        face.isVisible = angle > 0;
-      }
+      face.isVisible = object->culling == Culling::Front ? angle < 0 : angle > 0;
     }
 
     for (uint32_t j = 0; j < face.edgeCount; j++) {
@@ -79,7 +74,13 @@ void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& pr
 
     edge.isVisible = false;
 
-    if (!edge.faces.a->isVisible && (edge.faces.b == nullptr || !edge.faces.b->isVisible)) {
+    // Define edge culling from adjacent face/faces
+    // The culling infromation is needed later when rendering hidden lines with different brightness
+    edge.isCulled =
+        !edge.faces.a->isVisible && (edge.faces.b == nullptr || !edge.faces.b->isVisible);
+
+    // When rendering with no shading, further processing of the edge can be skipped altogether
+    if (edge.isCulled && object->shading == Shading::None) {
       continue;
     }
 
@@ -89,15 +90,15 @@ void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& pr
     ClipResult clipResult = clipLineNear(a, b);
 
     switch (clipResult) {
-      case Outside:
+      case ClipResult::Outside:
         continue;
-      case Inside:
+      case ClipResult::Inside:
         break;
-      case AClipped:
+      case ClipResult::AClipped:
         clippedVertices.push({{0}, a, true});
         ap = &clippedVertices.getLast();
         break;
-      case BClipped:
+      case ClipResult::BClipped:
         clippedVertices.push({{0}, b, true});
         bp = &clippedVertices.getLast();
         break;
@@ -129,7 +130,12 @@ void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& pr
     Vector4& b = edge.clipped.b->transformed;
 
     if (edge.isVisible) {
-      engine->add({{a.x, a.y}, {b.x, b.y}, object->brightness});
+      if (object->shading == Shading::Hidden) {
+        float brightness = edge.isCulled ? object->hiddenBrightness : object->brightness;
+        engine->add({{a.x, a.y}, {b.x, b.y}, brightness});
+      } else {
+        engine->add({{a.x, a.y}, {b.x, b.y}, object->brightness});
+      }
     }
   }
 }

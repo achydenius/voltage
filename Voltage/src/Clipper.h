@@ -60,7 +60,7 @@ inline bool clipLine(Vector2& a, Vector2& b, const Viewport& vp) {
 }
 
 // Return values for 3D clipping
-enum ClipResult { Inside, Outside, AClipped, BClipped };
+enum class ClipResult { Inside, Outside, AClipped, BClipped };
 
 // Clip a line to near plane in homogenous clip space
 inline ClipResult clipLineNear(Vector4& a, Vector4& b) {
@@ -70,11 +70,11 @@ inline ClipResult clipLineNear(Vector4& a, Vector4& b) {
 
   // Both outside
   if (da < 0 && db < 0) {
-    return Outside;
+    return ClipResult::Outside;
   }
   // Both inside
   if (da >= 0 && db >= 0) {
-    return Inside;
+    return ClipResult::Inside;
   }
 
   // One of the points is outside
@@ -82,10 +82,10 @@ inline ClipResult clipLineNear(Vector4& a, Vector4& b) {
 
   if (da < 0) {
     a = Vector4Lerp(a, b, t);
-    return AClipped;
+    return ClipResult::AClipped;
   } else {
     b = Vector4Lerp(a, b, t);
-    return BClipped;
+    return ClipResult::BClipped;
   }
 }
 }  // namespace voltage

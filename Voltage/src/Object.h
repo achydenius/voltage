@@ -6,16 +6,24 @@
 
 namespace voltage {
 
-enum FaceCulling { Front, Back, None };
+enum class Culling { Front, Back, None };
+enum class Shading { None, Hidden };
 
 class Object {
  public:
   Mesh* mesh;
   Vector3 rotation, translation, scaling;
   Matrix modelMatrix;
-  FaceCulling faceCulling;
+  Culling culling;
+  Shading shading;
+  float brightness, hiddenBrightness;
 
-  Object(Mesh* mesh) : mesh(mesh), faceCulling(None) {
+  Object(Mesh* mesh)
+      : mesh(mesh),
+        culling(Culling::None),
+        shading(Shading::None),
+        brightness(1.0),
+        hiddenBrightness(0.5) {
     setRotation(0, 0, 0);
     setTranslation(0, 0, 0);
     setScaling(1.0);

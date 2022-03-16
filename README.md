@@ -1,8 +1,8 @@
 # Voltage
 
-An oscillographics programming library for Arduino-compatible microcontrollers. The goal of the library is to provide a simple to use API for creating three-dimensional vector graphics similar to classic arcade games such as [Battlezone](https://www.arcade-museum.com/game_detail.php?game_id=7059) or [Star Wars](https://www.arcade-museum.com/game_detail.php?game_id=9773).
+An oscillographics programming library for [Teensy 3.6](https://www.pjrc.com/store/teensy36.html). The goal of the library is to provide a simple to use API for creating three-dimensional vector graphics similar to classic arcade games such as [Battlezone](https://www.arcade-museum.com/game_detail.php?game_id=7059) or [Star Wars](https://www.arcade-museum.com/game_detail.php?game_id=9773). 
 
-Development is currently being done with [Teensy 3.6](https://www.pjrc.com/store/teensy36.html). The project depends on [raylib's](https://www.raylib.com) header-only math library.
+The project depends on [raylib's](https://www.raylib.com) header-only math library. An external DAC can be used to control the brightness of individual lines.
 
 ![An oscilloscope running a Voltage example](https://raw.githubusercontent.com/achydenius/voltage/main/three-cubes.jpg)
 
@@ -21,6 +21,23 @@ The rendering loop consists of three phases:
 3. Render all the added geometry with `render` method call
 
 The preferred rendering resolution is defined when instantiating the engine. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
+
+## Setting up external DAC for brightness control
+
+An external [Microchip MCP4922](https://www.microchip.com/en-us/product/MCP4922) DAC can be used for setting the brightness of individual lines. MCP4922 can be used with Teensy 3.6 by using the following connections:
+
+| MCP4922                   | Teensy 3.6     |
+|---------------------------|----------------|
+| Pin 1 (V<sub>DD</sub>)    | 3.3V           |
+| Pin 3 (CS)                | Pin 10 (CS0)   |
+| Pin 4 (SCK)               | Pin 13 (SCK0)  |
+| Pin 5 (SDI)               | Pin 11 (MOSI0) |
+| Pin 8 (LDAC)              | GND            |
+| Pin 9 (SHDN)              | 3.3V           |
+| Pin 12 (V<sub>SS</sub>)   | GND            |
+| Pin 13 (V<sub>REFA</sub>) | 3.3V           |
+
+The DAC output voltage is in pin 14 (V<sub>OUTA</sub>).
 
 ## Code examples
 
@@ -73,3 +90,24 @@ void loop() {
   phase += 0.001;
 }
 ```
+
+### Initializing a MCP4922 DAC and enabling shading
+
+Initialize the `Engine` class as follows:
+
+```cpp
+MCP4922Writer *brightnessWriter = new MCP4922Writer();
+Engine engine(12, brightnessWriter);
+```
+
+Enable back face culling (i.e. determining of hidden lines), enable hidden line shading and set hidden line brightness:
+
+```cpp
+void setup() {
+  object->culling = Culling::Back;
+  object->shading = Shading::Hidden;
+  object->hiddenBrightness = 0.5;
+}
+```
+
+The rest of the code works just as in previous examples.

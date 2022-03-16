@@ -3,7 +3,7 @@
 using namespace voltage;
 
 void Rasterizer::drawPoint(const Vector2 &point) const {
-  dacWrite(transform(point.x), transform(point.y));
+  dacWriter.write(transform(point.x) << scaleBits, transform(point.y) << scaleBits);
 }
 
 // Draw a line with Bresenham's line algorithm:
@@ -42,7 +42,7 @@ void Rasterizer::drawLineLow(int32_t x0, int32_t y0, int32_t x1, int32_t y1) con
   int32_t y = y0;
 
   for (int32_t x = x0; x < x1; x++) {
-    dacWrite(x, y);
+    dacWriter.write(x << scaleBits, y << scaleBits);
     if (D > 0) {
       y = y + yi;
       D = D + (2 * (dy - dx));
@@ -65,7 +65,7 @@ void Rasterizer::drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) co
   int32_t x = x0;
 
   for (int32_t y = y0; y < y1; y++) {
-    dacWrite(x, y);
+    dacWriter.write(x << scaleBits, y << scaleBits);
     if (D > 0) {
       x = x + xi;
       D = D + (2 * (dx - dy));
@@ -77,18 +77,4 @@ void Rasterizer::drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) co
 
 uint32_t Rasterizer::transform(float value) const {
   return (uint32_t)(value * scaleValueHalf + scaleValueHalf);
-}
-
-// Low-level analog write implementation for Teensy 3.6 is copy-pasted here from the core library:
-// https://github.com/PaulStoffregen/cores/blob/1.54/teensy3/analog.c#L520-L564
-// This improves performance dramatically as the function calls in rendering loop are bypassed.
-typedef int16_t __attribute__((__may_alias__)) aliased_int16_t;
-void Rasterizer::dacWrite(uint32_t x, uint32_t y) const {
-  SIM_SCGC2 |= SIM_SCGC2_DAC0;
-  DAC0_C0 = DAC_C0_DACEN | DAC_C0_DACRFS;  // 3.3V VDDA is DACREF_2
-  *(volatile aliased_int16_t *)&(DAC0_DAT0L) = x << scaleBits;
-
-  SIM_SCGC2 |= SIM_SCGC2_DAC1;
-  DAC1_C0 = DAC_C0_DACEN | DAC_C0_DACRFS;  // 3.3V VDDA is DACREF_2
-  *(volatile aliased_int16_t *)&(DAC1_DAT0L) = y << scaleBits;
 }

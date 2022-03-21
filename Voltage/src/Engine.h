@@ -5,8 +5,8 @@
 #include "Camera.h"
 #include "Clipper.h"
 #include "Object.h"
+#include "ObjectPipeline.h"
 #include "Rasterizer.h"
-#include "Renderer.h"
 #include "types.h"
 
 namespace voltage {
@@ -14,7 +14,7 @@ namespace voltage {
 class Engine {
   static const uint32_t defaultMaxLines = 1000;
   static const uint32_t defaultMaxPoints = 1000;
-  Renderer renderer;
+  ObjectPipeline pipeline;
   const Rasterizer rasterizer;
   const Teensy36Writer lineWriter;
   const SingleDACWriter* brightnessWriter;
@@ -29,7 +29,7 @@ class Engine {
  public:
   Engine(uint8_t resolutionBits, SingleDACWriter* brightnessWriter = nullptr,
          uint32_t maxLines = defaultMaxLines, uint32_t maxPoints = defaultMaxPoints)
-      : renderer(this, maxLines),
+      : pipeline(this, maxLines),
         rasterizer(lineWriter, resolutionBits),
         brightnessWriter(brightnessWriter),
         lines(maxLines),

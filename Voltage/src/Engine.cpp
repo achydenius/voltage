@@ -24,7 +24,7 @@ void Engine::add(Object* object, Camera& camera) {
 }
 
 void Engine::add(const Array<Object*>& objects, Camera& camera) {
-  renderer.render(objects, camera);
+  pipeline.render(objects, camera);
 }
 
 void Engine::addViewport() {

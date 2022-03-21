@@ -1,7 +1,6 @@
-#include "Renderer.h"
-
 #include "Clipper.h"
 #include "Engine.h"
+#include "ObjectPipeline.h"
 #include "Timer.h"
 #include "utils.h"
 
@@ -11,7 +10,7 @@ TIMER_CREATE(transform);
 TIMER_CREATE(nearClip);
 TIMER_CREATE(faceCulling);
 
-void Renderer::render(const Array<Object*>& objects, Camera& camera) {
+void ObjectPipeline::render(const Array<Object*>& objects, Camera& camera) {
   Matrix viewMatrix = camera.getViewMatrix();
   Matrix projectionMatrix = camera.getProjectionMatrix();
 
@@ -28,7 +27,8 @@ void Renderer::render(const Array<Object*>& objects, Camera& camera) {
   TIMER_PRINT(faceCulling);
 }
 
-void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
+void ObjectPipeline::render(Object* object, const Matrix& viewMatrix,
+                            const Matrix& projectionMatrix) {
   Mesh* mesh = object->mesh;
 
   // Transform camera to model space and perform face culling.

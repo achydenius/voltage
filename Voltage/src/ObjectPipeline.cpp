@@ -1,6 +1,7 @@
-#include "Clipper.h"
-#include "Engine.h"
 #include "ObjectPipeline.h"
+
+#include "Clipper.h"
+#include "Renderer.h"
 #include "Timer.h"
 #include "utils.h"
 
@@ -10,12 +11,12 @@ TIMER_CREATE(transform);
 TIMER_CREATE(nearClip);
 TIMER_CREATE(faceCulling);
 
-void ObjectPipeline::render(const Array<Object*>& objects, Camera& camera) {
+void ObjectPipeline::process(const Array<Object*>& objects, Camera& camera) {
   Matrix viewMatrix = camera.getViewMatrix();
   Matrix projectionMatrix = camera.getProjectionMatrix();
 
   for (uint32_t i = 0; i < objects.getCapacity(); i++) {
-    render(objects[i], viewMatrix, projectionMatrix);
+    process(objects[i], viewMatrix, projectionMatrix);
   }
 
   TIMER_SAVE(transform);
@@ -27,8 +28,8 @@ void ObjectPipeline::render(const Array<Object*>& objects, Camera& camera) {
   TIMER_PRINT(faceCulling);
 }
 
-void ObjectPipeline::render(Object* object, const Matrix& viewMatrix,
-                            const Matrix& projectionMatrix) {
+void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
+                             const Matrix& projectionMatrix) {
   Mesh* mesh = object->mesh;
 
   // Transform camera to model space and perform face culling.
@@ -132,9 +133,9 @@ void ObjectPipeline::render(Object* object, const Matrix& viewMatrix,
     if (edge.isVisible) {
       if (object->shading == Shading::Hidden) {
         float brightness = edge.isCulled ? object->hiddenBrightness : object->brightness;
-        engine->add({{a.x, a.y}, {b.x, b.y}, brightness});
+        renderer->add({{a.x, a.y}, {b.x, b.y}, brightness});
       } else {
-        engine->add({{a.x, a.y}, {b.x, b.y}, object->brightness});
+        renderer->add({{a.x, a.y}, {b.x, b.y}, object->brightness});
       }
     }
   }

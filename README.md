@@ -16,11 +16,11 @@ The project depends on [raylib's](https://www.raylib.com) header-only math libra
 
 The rendering loop consists of three phases:
 
-1. Clear `Engine`'s internal buffers with `clear` method call
+1. Clear `Renderer`'s internal buffers with `clear` method call
 2. Add geometry to be rendered with the overloaded `add` method
 3. Render all the added geometry with `render` method call
 
-The preferred rendering resolution is defined when instantiating the engine. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
+The preferred rendering resolution is defined when instantiating the renderer. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
 
 ## Setting up external DAC for brightness control
 
@@ -48,18 +48,18 @@ More examples can be found in [examples](examples/) directory.
 ```cpp
 #include <Voltage.h>
 
-voltage::Engine engine(12);
+voltage::Renderer renderer(12);
 
 void setup() {}
 
 float phase = 0;
 void loop() {
-  engine.clear();
-  engine.add({
+  renderer.clear();
+  renderer.add({
     { cosf(phase), sinf(phase) },
     { cosf(PI + phase), sinf(PI + phase) }
   });
-  engine.render();
+  renderer.render();
 
   phase -= 0.001;
 }
@@ -72,7 +72,7 @@ void loop() {
 
 using namespace voltage;
 
-Engine engine(10);
+Renderer renderer(10);
 Mesh *mesh = MeshBuilder::createCube(1.0);
 Object *object = new Object(mesh);
 FreeCamera camera;
@@ -84,20 +84,20 @@ void loop() {
   camera.setTranslation(0, 0, sin(phase) * 5.0);
   object->setRotation(phase, phase, 0);
 
-  engine.clear();
-  engine.add(object, camera);
-  engine.render();
+  renderer.clear();
+  renderer.add(object, camera);
+  renderer.render();
   phase += 0.001;
 }
 ```
 
 ### Initializing a MCP4922 DAC and enabling shading
 
-Initialize the `Engine` class as follows:
+Initialize the `Renderer` class as follows:
 
 ```cpp
 MCP4922Writer *brightnessWriter = new MCP4922Writer();
-Engine engine(12, brightnessWriter);
+Renderer renderer(12, brightnessWriter);
 ```
 
 Enable back face culling (i.e. determining of hidden lines), enable hidden line shading and set hidden line brightness:

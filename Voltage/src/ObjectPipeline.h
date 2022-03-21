@@ -8,19 +8,20 @@
 
 namespace voltage {
 
-class Engine;
+class Renderer;
 
 class ObjectPipeline {
-  Engine* engine;
+  Renderer* renderer;
   Buffer<Vertex> clippedVertices;
 
  public:
-  ObjectPipeline(Engine* engine, uint32_t maxLines) : engine(engine), clippedVertices(maxLines) {}
+  ObjectPipeline(Renderer* renderer, uint32_t maxLines)
+      : renderer(renderer), clippedVertices(maxLines) {}
 
-  void render(const Array<Object*>& objects, Camera& camera);
+  void process(const Array<Object*>& objects, Camera& camera);
 
  private:
-  void render(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
+  void process(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
 };
 
 }  // namespace voltage

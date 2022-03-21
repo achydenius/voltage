@@ -1,6 +1,6 @@
 #include <Voltage.h>
 
-voltage::Engine engine(10);
+voltage::Renderer renderer(10);
 
 voltage::Mesh *mesh = voltage::MeshBuilder::createIcosphere(1.0, 3);
 voltage::Object *object = new voltage::Object(mesh);
@@ -31,8 +31,8 @@ void loop() {
 
   object->setRotation(0, 0, phase);
 
-  engine.clear();
-  engine.add(object, camera);
-  engine.render();
+  renderer.clear();
+  renderer.add(object, camera);
+  renderer.render();
   phase += 0.01;
 }

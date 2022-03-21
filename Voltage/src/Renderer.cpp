@@ -1,141 +1,103 @@
 #include "Renderer.h"
 
-#include "Clipper.h"
-#include "Engine.h"
 #include "Timer.h"
-#include "utils.h"
 
 using namespace voltage;
 
-TIMER_CREATE(transform);
-TIMER_CREATE(nearClip);
-TIMER_CREATE(faceCulling);
+void Renderer::setViewport(const Viewport& viewport) { this->viewport = viewport; }
 
-void Renderer::render(const Array<Object*>& objects, Camera& camera) {
-  Matrix viewMatrix = camera.getViewMatrix();
-  Matrix projectionMatrix = camera.getProjectionMatrix();
-
-  for (uint32_t i = 0; i < objects.getCapacity(); i++) {
-    render(objects[i], viewMatrix, projectionMatrix);
-  }
-
-  TIMER_SAVE(transform);
-  TIMER_SAVE(nearClip);
-  TIMER_SAVE(faceCulling);
-
-  TIMER_PRINT(transform);
-  TIMER_PRINT(nearClip);
-  TIMER_PRINT(faceCulling);
+void Renderer::setBlankingPoint(const Vector2& blankingPoint) {
+  this->blankingPoint = blankingPoint;
 }
 
-void Renderer::render(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix) {
-  Mesh* mesh = object->mesh;
+void Renderer::clear() {
+  lines.clear();
+  points.clear();
+}
 
-  // Transform camera to model space and perform face culling.
-  // If culling is disabled, mark all faces and vertices visible
-  TIMER_START(faceCulling);
-  Matrix modelViewMatrix = MatrixMultiply(object->getModelMatrix(), viewMatrix);
-  Matrix viewModelMatrix = MatrixInvert(modelViewMatrix);
-  Vector3 cameraPosition = Vector3Transform({0, 0, 0}, viewModelMatrix);
+void Renderer::add(const Line& line) { lines.push(line); }
 
-  mesh->setVerticesVisible(false);
+void Renderer::add(const Point& point) { points.push(point); }
 
-  for (uint32_t i = 0; i < mesh->faceCount; i++) {
-    Face& face = mesh->faces[i];
-    if (object->culling == Culling::None) {
-      face.isVisible = true;
-    } else {
-      float angle = face.getNormalAngle(cameraPosition);
-      face.isVisible = object->culling == Culling::Front ? angle < 0 : angle > 0;
-    }
+void Renderer::add(Object* object, Camera& camera) {
+  static Array<Object*> objects(1);
+  objects[0] = object;
+  add(objects, camera);
+}
 
-    for (uint32_t j = 0; j < face.edgeCount; j++) {
-      face.edges[j]->vertices.a->isVisible = true;
-      face.edges[j]->vertices.b->isVisible = true;
-    }
-  }
-  TIMER_STOP(faceCulling);
+void Renderer::add(const Array<Object*>& objects, Camera& camera) {
+  pipeline.process(objects, camera);
+}
 
-  // Transform visible vertices (i.e. the ones being part of a potentially visible edge)
-  TIMER_START(transform);
-  Matrix modelViewProjectionMatrix = MatrixMultiply(modelViewMatrix, projectionMatrix);
-  mesh->transformVisibleVertices(modelViewProjectionMatrix);
-  TIMER_STOP(transform);
+void Renderer::addViewport() {
+  Vector2 points[] = {
+      {viewport.left, viewport.top},
+      {viewport.right, viewport.top},
+      {viewport.right, viewport.bottom},
+      {viewport.left, viewport.bottom},
+  };
 
-  // Clip lines against near plane
-  // TODO: Do all clipping in clip space?
-  clippedVertices.clear();
-
-  TIMER_START(nearClip);
-  for (uint32_t i = 0; i < mesh->edgeCount; i++) {
-    Edge& edge = mesh->edges[i];
-    Vertex* ap = edge.vertices.a;
-    Vertex* bp = edge.vertices.b;
-
-    edge.isVisible = false;
-
-    // Define edge culling from adjacent face/faces
-    // The culling infromation is needed later when rendering hidden lines with different brightness
-    edge.isCulled =
-        !edge.faces.a->isVisible && (edge.faces.b == nullptr || !edge.faces.b->isVisible);
-
-    // When rendering with no shading, further processing of the edge can be skipped altogether
-    if (edge.isCulled && object->shading == Shading::None) {
-      continue;
-    }
-
-    Vector4 a = ap->transformed;
-    Vector4 b = bp->transformed;
-
-    ClipResult clipResult = clipLineNear(a, b);
-
-    switch (clipResult) {
-      case ClipResult::Outside:
-        continue;
-      case ClipResult::Inside:
-        break;
-      case ClipResult::AClipped:
-        clippedVertices.push({{0}, a, true});
-        ap = &clippedVertices.getLast();
-        break;
-      case ClipResult::BClipped:
-        clippedVertices.push({{0}, b, true});
-        bp = &clippedVertices.getLast();
-        break;
-    }
-
-    ap->isVisible = true;
-    bp->isVisible = true;
-    edge.clipped = {ap, bp};
-    edge.isVisible = true;
-  }
-  TIMER_STOP(nearClip);
-
-  // Perspective divide visible both original and clipper-generated vertices
-  TIMER_START(transform);
-  for (uint32_t i = 0; i < mesh->vertexCount; i++) {
-    Vertex& vertex = mesh->vertices[i];
-    if (vertex.isVisible) {
-      vertex.perspectiveDivide();
-    }
-  }
-  for (uint32_t i = 0; i < clippedVertices.getSize(); i++) {
-    clippedVertices[i].perspectiveDivide();
-  }
-  TIMER_STOP(transform);
-
-  for (uint32_t i = 0; i < mesh->edgeCount; i++) {
-    Edge& edge = mesh->edges[i];
-    Vector4& a = edge.clipped.a->transformed;
-    Vector4& b = edge.clipped.b->transformed;
-
-    if (edge.isVisible) {
-      if (object->shading == Shading::Hidden) {
-        float brightness = edge.isCulled ? object->hiddenBrightness : object->brightness;
-        engine->add({{a.x, a.y}, {b.x, b.y}, brightness});
-      } else {
-        engine->add({{a.x, a.y}, {b.x, b.y}, object->brightness});
-      }
-    }
+  for (uint32_t i = 0; i < 4; i++) {
+    add({points[i], points[(i + 1) % 4], 1.0});
   }
 }
+
+TIMER_CREATE(viewportClip);
+TIMER_CREATE(rasterize);
+
+void Renderer::render() {
+  TIMER_START(viewportClip);
+  clippedLines.clear();
+  for (uint32_t i = 0; i < lines.getSize(); i++) {
+    Line line = lines[i];
+    Vector2 a = line.a;
+    Vector2 b = line.b;
+    if (clipLine(a, b, viewport)) {
+      clippedLines.push({a, b, lines[i].brightness});
+    }
+  }
+
+  clippedPoints.clear();
+  for (uint32_t i = 0; i < points.getSize(); i++) {
+    Point point = points[i];
+    if (point.x >= viewport.left && point.x < viewport.right && point.y >= viewport.bottom &&
+        point.y < viewport.top) {
+      clippedPoints.push(point);
+    }
+  }
+  TIMER_STOP(viewportClip);
+
+  TIMER_START(rasterize);
+  for (uint32_t i = 0; i < clippedLines.getSize(); i++) {
+    if (brightnessWriter != nullptr) {
+      brightnessWriter->write(transformBrightness(clippedLines[i].brightness));
+    }
+
+    rasterizer.drawLine(clippedLines[i].a, clippedLines[i].b);
+  }
+
+  for (uint32_t i = 0; i < clippedPoints.getSize(); i++) {
+    if (brightnessWriter != nullptr) {
+      brightnessWriter->write(transformBrightness(clippedPoints[i].brightness));
+    }
+    rasterizer.drawPoint({clippedPoints[i].x, clippedPoints[i].y});
+  }
+  TIMER_STOP(rasterize);
+
+  TIMER_SAVE(viewportClip);
+  TIMER_SAVE(rasterize);
+
+  TIMER_PRINT(viewportClip);
+  TIMER_PRINT(rasterize);
+
+  if (brightnessWriter != nullptr) {
+    brightnessWriter->write(4095);
+  } else {
+    // Move beam to blanking point (i.e. outside the screen) when finished drawing
+    rasterizer.drawPoint(blankingPoint);
+  }
+}
+
+uint32_t Renderer::transformBrightness(float value) const {
+  return (uint32_t)((1.0 - value) * 4095.0);
+};

@@ -3,24 +3,52 @@
 
 #include "Array.h"
 #include "Camera.h"
+#include "Clipper.h"
 #include "Object.h"
+#include "ObjectPipeline.h"
+#include "Rasterizer.h"
 #include "types.h"
 
 namespace voltage {
 
-class Engine;
-
 class Renderer {
-  Engine* engine;
-  Buffer<Vertex> clippedVertices;
+  static const uint32_t defaultMaxLines = 1000;
+  static const uint32_t defaultMaxPoints = 1000;
+  ObjectPipeline pipeline;
+  const Rasterizer rasterizer;
+  const Teensy36Writer lineWriter;
+  const SingleDACWriter* brightnessWriter;
+  Buffer<Line> lines;
+  Buffer<Point> points;
+  Buffer<Line> clippedLines;
+  Buffer<Point> clippedPoints;
+
+  Viewport viewport = {-1.0, 1.0, 0.75, -0.75};
+  Vector2 blankingPoint = {1.0, 1.0};
 
  public:
-  Renderer(Engine* engine, uint32_t maxLines) : engine(engine), clippedVertices(maxLines) {}
+  Renderer(uint8_t resolutionBits, SingleDACWriter* brightnessWriter = nullptr,
+           uint32_t maxLines = defaultMaxLines, uint32_t maxPoints = defaultMaxPoints)
+      : pipeline(this, maxLines),
+        rasterizer(lineWriter, resolutionBits),
+        brightnessWriter(brightnessWriter),
+        lines(maxLines),
+        points(maxPoints),
+        clippedLines(maxLines),
+        clippedPoints(maxPoints) {}
 
-  void render(const Array<Object*>& objects, Camera& camera);
+  void setViewport(const Viewport& viewport);
+  void setBlankingPoint(const Vector2& blankingPoint);
+  void clear();
+  void add(const Line& line);
+  void add(const Point& point);
+  void add(Object* object, Camera& camera);
+  void add(const Array<Object*>& objects, Camera& camera);
+  void addViewport();
+  void render();
 
  private:
-  void render(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
+  inline uint32_t transformBrightness(float value) const;
 };
 
 }  // namespace voltage

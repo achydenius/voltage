@@ -44,8 +44,8 @@ class Renderer {
   void add(const Point& point);
   void add(Object* object, Camera& camera);
   void add(const Array<Object*>& objects, Camera& camera);
-  void addViewport();
   void render();
+  void renderCalibrationView();
 
  private:
   inline uint32_t transformBrightness(float value) const;

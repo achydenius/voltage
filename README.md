@@ -22,6 +22,10 @@ The rendering loop consists of three phases:
 
 The preferred rendering resolution is defined when instantiating the renderer. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
 
+## Display calibration
+
+Connected display can be adjusted (e.g. setting correct X/Y/Z scaling) a bit easier by calling `Renderer`'s `renderCalibrationView` method. Calibration view shows a cube for adjusting the aspect ratio, crosshair for centering the image and corner markers for displaying the current clipping viewport. The desired viewport can be set with `Renderer`'s `setViewport` method.
+
 ## Setting up external DAC for brightness control
 
 An external [Microchip MCP4922](https://www.microchip.com/en-us/product/MCP4922) DAC can be used for setting the brightness of individual lines. MCP4922 can be used with Teensy 3.6 by using the following connections:

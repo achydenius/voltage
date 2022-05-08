@@ -60,31 +60,69 @@ inline bool clipLine(Vector2& a, Vector2& b, const Viewport& vp) {
 }
 
 // Return values for 3D clipping
-enum class ClipResult { Inside, Outside, AClipped, BClipped };
+enum class ClipResult { Inside, Outside, AClipped, BClipped, BothClipped };
 
-// Clip a line to near plane in homogenous clip space
-inline ClipResult clipLineNear(Vector4& a, Vector4& b) {
-  // Distance to clipping plane
-  float da = a.z + a.w;
-  float db = b.z + b.w;
+enum class ClipPlane { Near, Far };
+enum { CodeNear = 0x1, CodeFar = 0x2 };
+typedef int unsigned OutCode;
+
+inline OutCode getOutCode(const Vector4& vector) {
+  OutCode outCode = 0;
+  if (vector.z < -vector.w) {
+    outCode |= CodeNear;
+  }
+  if (-vector.z < -vector.w) {
+    outCode |= CodeFar;
+  }
+  return outCode;
+}
+
+inline float getDistanceToPlane(const Vector4& vector, const ClipPlane plane) {
+  return plane == ClipPlane::Near ? vector.z + vector.w : -vector.z + vector.w;
+}
+
+inline Vector4 clipAgainstPlane(const Vector4& a, const Vector4& b, const ClipPlane plane) {
+  float da = getDistanceToPlane(a, plane);
+  float db = getDistanceToPlane(b, plane);
+  float t = da / (da - db);
+  return Vector4Lerp(a, b, t);
+}
+
+inline ClipResult clipLineNearAndFar(Vector4& a, Vector4& b) {
+  OutCode aOutCode = getOutCode(a);
+  OutCode bOutCode = getOutCode(b);
 
   // Both outside
-  if (da < 0 && db < 0) {
+  if (aOutCode & bOutCode) {
     return ClipResult::Outside;
   }
+
   // Both inside
-  if (da >= 0 && db >= 0) {
+  if (!(aOutCode | bOutCode)) {
     return ClipResult::Inside;
   }
 
-  // One of the points is outside
-  float t = da / (da - db);
+  // A is clipped
+  if (aOutCode & CodeNear) {
+    a = clipAgainstPlane(a, b, ClipPlane::Near);
+  }
+  if (aOutCode & CodeFar) {
+    a = clipAgainstPlane(a, b, ClipPlane::Far);
+  }
 
-  if (da < 0) {
-    a = Vector4Lerp(a, b, t);
+  // B is clipped
+  if (bOutCode & CodeNear) {
+    b = clipAgainstPlane(a, b, ClipPlane::Near);
+  }
+  if (bOutCode & CodeFar) {
+    b = clipAgainstPlane(a, b, ClipPlane::Far);
+  }
+
+  if (aOutCode && bOutCode) {
+    return ClipResult::BothClipped;
+  } else if (aOutCode) {
     return ClipResult::AClipped;
   } else {
-    b = Vector4Lerp(a, b, t);
     return ClipResult::BClipped;
   }
 }

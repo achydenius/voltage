@@ -63,7 +63,7 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
   mesh->transformVisibleVertices(modelViewProjectionMatrix);
   TIMER_STOP(transform);
 
-  // Clip lines against near plane
+  // Clip lines against camera near and far planes
   // TODO: Do all clipping in clip space?
   clippedVertices.clear();
 
@@ -88,21 +88,18 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
     Vector4 a = ap->transformed;
     Vector4 b = bp->transformed;
 
-    ClipResult clipResult = clipLineNear(a, b);
+    ClipResult clipResult = clipLineNearAndFar(a, b);
 
-    switch (clipResult) {
-      case ClipResult::Outside:
-        continue;
-      case ClipResult::Inside:
-        break;
-      case ClipResult::AClipped:
-        clippedVertices.push({{0}, a, true});
-        ap = &clippedVertices.getLast();
-        break;
-      case ClipResult::BClipped:
-        clippedVertices.push({{0}, b, true});
-        bp = &clippedVertices.getLast();
-        break;
+    if (clipResult == ClipResult::Outside) {
+      continue;
+    }
+    if (clipResult == ClipResult::AClipped || clipResult == ClipResult::BothClipped) {
+      clippedVertices.push({{0}, a, true});
+      ap = &clippedVertices.getLast();
+    }
+    if (clipResult == ClipResult::BClipped || clipResult == ClipResult::BothClipped) {
+      clippedVertices.push({{0}, b, true});
+      bp = &clippedVertices.getLast();
     }
 
     ap->isVisible = true;

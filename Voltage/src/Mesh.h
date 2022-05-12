@@ -21,8 +21,10 @@ class Vertex {
   bool isVisible;
 
   void perspectiveDivide() {
-    transformed.x /= transformed.w;
-    transformed.y /= transformed.w;
+    float div = 1.0 / transformed.w;
+    transformed.x *= div;
+    transformed.y *= div;
+    transformed.z *= div;
   }
 };
 

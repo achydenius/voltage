@@ -43,11 +43,13 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
 
   for (uint32_t i = 0; i < mesh->faceCount; i++) {
     Face& face = mesh->faces[i];
-    if (object->culling == Culling::None) {
-      face.isVisible = true;
-    } else {
+    if (object->culling == Culling::Front || object->culling == Culling::Back) {
       float angle = face.getNormalAngle(cameraPosition);
       face.isVisible = object->culling == Culling::Front ? angle < 0 : angle > 0;
+    } else if (object->shading == Shading::Hidden) {
+      face.isVisible = face.getNormalAngle(cameraPosition) > 0;
+    } else {
+      face.isVisible = true;
     }
 
     for (uint32_t j = 0; j < face.edgeCount; j++) {
@@ -80,8 +82,7 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
     edge.isCulled =
         !edge.faces.a->isVisible && (edge.faces.b == nullptr || !edge.faces.b->isVisible);
 
-    // When rendering with no shading, further processing of the edge can be skipped altogether
-    if (edge.isCulled && object->shading == Shading::None) {
+    if (object->culling != Culling::None && edge.isCulled) {
       continue;
     }
 
@@ -128,7 +129,11 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
     Vector4& b = edge.clipped.b->transformed;
 
     if (edge.isVisible) {
-      if (object->shading == Shading::Hidden) {
+      if (object->shading == Shading::Distance) {
+        float z = a.z > b.z ? a.z : b.z;
+        float brightness = (-z * 0.5) + 0.5;
+        renderer->add({{a.x, a.y}, {b.x, b.y}, brightness});
+      } else if (object->shading == Shading::Hidden) {
         float brightness = edge.isCulled ? object->hiddenBrightness : object->brightness;
         renderer->add({{a.x, a.y}, {b.x, b.y}, brightness});
       } else {

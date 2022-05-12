@@ -100,11 +100,10 @@ MCP4922Writer *brightnessWriter = new MCP4922Writer();
 Renderer renderer(12, brightnessWriter);
 ```
 
-Enable back face culling (i.e. determining of hidden lines), enable hidden line shading and set hidden line brightness:
+Enable hidden line shading and set the hidden line brightness:
 
 ```cpp
 void setup() {
-  object->culling = Culling::Back;
   object->shading = Shading::Hidden;
   object->hiddenBrightness = 0.5;
 }

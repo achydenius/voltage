@@ -48,6 +48,9 @@ class LookAtCamera : public Camera {
   Vector3 up = {0, 1.0, 0};
 
  public:
+  LookAtCamera(float fov, float aspect, float near, float far) : Camera(fov, aspect, near, far) {}
+  LookAtCamera() : Camera() {}
+
   Matrix& getViewMatrix() {
     viewMatrix = MatrixLookAt(eye, target, up);
     return viewMatrix;

@@ -87,6 +87,7 @@ class Mesh {
   Vertex* vertices;
   Edge* edges;
   Face* faces;
+  Vector4 boundingSphere;
 
   Mesh(const Vector3* vertices, const uint32_t vertexCount, const FaceDefinition* faces,
        const uint32_t faceCount);
@@ -118,6 +119,7 @@ class Mesh {
   void generateEdges();
   void generateNormals();
   void addFaceToEdgePointers();
+  void calculateBoundingSphere();
 };
 
 };  // namespace voltage

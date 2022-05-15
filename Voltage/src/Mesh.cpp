@@ -60,6 +60,7 @@ void Mesh::setupVerticesAndFaces(const Vector3* sourceVertices, const uint32_t s
   }
 
   generateNormals();
+  calculateBoundingSphere();
 }
 
 void Mesh::scale(const float value) {
@@ -136,6 +137,32 @@ void Mesh::addFaceToEdgePointers() {
                 face.edges);
     }
   }
+}
+
+void Mesh::calculateBoundingSphere() {
+  Vector3 min = {0, 0, 0};
+  Vector3 max = {0, 0, 0};
+
+  // Calculate axis-aligned bounding box
+  for (uint32_t i = 0; i < vertexCount; i++) {
+    // TODO: Use Vector3Min/Max instead?
+    min.x = fminf(min.x, vertices[i].original.x);
+    max.x = fmaxf(max.x, vertices[i].original.x);
+    min.y = fminf(min.y, vertices[i].original.y);
+    max.y = fmaxf(max.y, vertices[i].original.y);
+    min.z = fminf(min.z, vertices[i].original.z);
+    max.z = fmaxf(max.z, vertices[i].original.z);
+  }
+
+  // Calculate center and radius of the sphere
+  float r = 0;
+  Vector3 center = Vector3Midpoint(min, max);
+
+  for (uint32_t i = 0; i < vertexCount; i++) {
+    r = fmaxf(r, Vector3Distance(vertices[i].original, center));
+  }
+
+  boundingSphere = {center.x, center.y, center.z, r};
 }
 
 }  // namespace voltage

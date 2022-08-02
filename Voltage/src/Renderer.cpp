@@ -1,5 +1,8 @@
-#include "Renderer.h"
+#ifndef VOLTAGE_EMULATOR
+#include <Arduino.h>
+#endif
 
+#include "Renderer.h"
 #include "Timer.h"
 
 using namespace voltage;

@@ -1,5 +1,8 @@
 #include <SDL2/SDL.h>
 
+#define VOLTAGE_EMULATOR
+#include "../Voltage/src/Voltage.h"
+
 #define WIDTH 800
 #define HEIGHT 600
 

@@ -20,7 +20,7 @@ inline Vector4 Vector4Lerp(const Vector4 &a, const Vector4 &b, const float amoun
 }
 
 inline Vector3 Vector3Midpoint(const Vector3 &a, const Vector3 &b) {
-  return {(a.x + b.x) / 2.0, (a.y + b.y) / 2.0, (a.z + b.z) / 2.0};
+  return {(a.x + b.x) / 2.0f, (a.y + b.y) / 2.0f, (a.z + b.z) / 2.0f};
 }
 
 }  // namespace voltage

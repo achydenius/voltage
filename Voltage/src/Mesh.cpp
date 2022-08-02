@@ -1,8 +1,12 @@
-#include "Mesh.h"
+#ifndef VOLTAGE_EMULATOR
+#include <Arduino.h>
+#endif
 
 #include <algorithm>
 
-namespace voltage {
+#include "Mesh.h"
+
+using namespace voltage;
 
 Mesh::Mesh(const Vector3* vertices, const uint32_t vertexCount, const FaceDefinition* faces,
            const uint32_t faceCount) {
@@ -164,5 +168,3 @@ void Mesh::calculateBoundingSphere() {
 
   boundingSphere = {center.x, center.y, center.z, r};
 }
-
-}  // namespace voltage

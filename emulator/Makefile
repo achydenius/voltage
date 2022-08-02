@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -pedantic
+CFLAGS = -std=c++11 -Wall
 OBJS = main.o
 LIBS = -lSDL2
 

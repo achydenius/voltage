@@ -1,9 +1,7 @@
 #ifndef VOLTAGE_RASTERIZER_H_
 #define VOLTAGE_RASTERIZER_H_
 
-#include <Arduino.h>
-
-#include "DACWriter.h"
+#include "Writer.h"
 #include "raymath.h"
 
 namespace voltage {

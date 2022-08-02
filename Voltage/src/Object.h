@@ -1,7 +1,7 @@
 #ifndef VOLTAGE_OBJECT_H_
 #define VOLTAGE_OBJECT_H_
 
-#include "mesh.h"
+#include "Mesh.h"
 #include "raymath.h"
 
 namespace voltage {

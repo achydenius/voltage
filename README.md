@@ -22,14 +22,6 @@ The rendering loop consists of three phases:
 
 The preferred rendering resolution is defined when instantiating the renderer. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
 
-## Running without oscilloscope and Arduino (MacOS)
-
-Voltage can be used without oscilloscope and Arduino. This can be useful for a bit more convenient testing and development. The oscilloscope/Arduino emulator can be found in *emulator* directory.
-
-1. Install [SDL2](https://www.libsdl.org/)with `brew install sdl2`
-2. Build emulator with `make`
-3. Run the emulator with `./main`
-
 ## Setting up external DAC for brightness control
 
 An external [Microchip MCP4922](https://www.microchip.com/en-us/product/MCP4922) DAC can be used for setting the brightness of individual lines. MCP4922 can be used with Teensy 3.6 by using the following connections:
@@ -118,3 +110,11 @@ void setup() {
 ```
 
 The rest of the code works just as in previous examples.
+
+## Running without oscilloscope and Teensy on MacOS (experimental)
+
+Voltage can also be used without oscilloscope and Teensy. This can be useful for a bit more convenient testing and development. The oscilloscope/Teensy emulator can be found in *emulator* directory. *main.cpp* file includes the cube example above and contains further instructions how to modify/use the code.
+
+1. Install [SDL2](https://www.libsdl.org/) with `brew install sdl2`
+2. Build emulator with `make`
+3. Run the emulator with `./main`

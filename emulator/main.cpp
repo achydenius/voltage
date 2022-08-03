@@ -7,7 +7,8 @@ using namespace voltage;
 Emulator emulator(10);
 DualDACWriter* writer = emulator.createWriter();
 
-// the rest of the code can be written just like in Arduino IDE
+// the rest of the code can be written like in Arduino IDE,
+// the writer just needs to be passed to the renderer
 Renderer renderer(10, *writer);
 Mesh* mesh = MeshBuilder::createCube(1.0);
 Object* object = new Object(mesh);

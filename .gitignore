@@ -1,4 +1,5 @@
 raymath.h
 *.o
+*.d
 main
 voltage.a

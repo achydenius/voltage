@@ -8,17 +8,9 @@
 #include <Arduino.h>
 #include <SPI.h>
 
+#include "Writer.h"
+
 namespace voltage {
-
-class SingleDACWriter {
- public:
-  virtual void write(uint32_t value) const = 0;
-};
-
-class DualDACWriter {
- public:
-  virtual void write(uint32_t a, uint32_t b) const = 0;
-};
 
 typedef int16_t __attribute__((__may_alias__)) aliased_int16_t;
 

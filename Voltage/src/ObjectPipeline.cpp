@@ -1,6 +1,9 @@
-#include "ObjectPipeline.h"
+#ifndef VOLTAGE_EMULATOR
+#include <Arduino.h>
+#endif
 
 #include "Clipper.h"
+#include "ObjectPipeline.h"
 #include "Renderer.h"
 #include "Timer.h"
 #include "utils.h"

@@ -1,3 +1,7 @@
+#ifndef VOLTAGE_EMULATOR
+#include <Arduino.h>
+#endif
+
 #include "Rasterizer.h"
 
 using namespace voltage;

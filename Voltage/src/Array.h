@@ -1,8 +1,6 @@
 #ifndef VOLTAGE_ARRAY_H_
 #define VOLTAGE_ARRAY_H_
 
-#include <Arduino.h>
-
 #include <algorithm>
 #include <initializer_list>
 

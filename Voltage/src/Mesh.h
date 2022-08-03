@@ -3,8 +3,6 @@
 
 #define VOLTAGE_MESH_MAX_EDGES 1000
 
-#include <Arduino.h>
-
 #include <algorithm>
 #include <initializer_list>
 
@@ -30,7 +28,7 @@ class Vertex {
 
 struct Edge {
   Pair<Vertex*> vertices;
-  Pair<struct Face*> faces;
+  Pair<class Face*> faces;
   Pair<Vertex*> clipped;
   bool isVisible;
   bool isCulled;

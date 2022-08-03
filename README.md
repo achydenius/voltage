@@ -110,3 +110,11 @@ void setup() {
 ```
 
 The rest of the code works just as in previous examples.
+
+## Running without oscilloscope and Teensy on MacOS (experimental)
+
+Voltage can also be used without oscilloscope and Teensy. This can be useful for a bit more convenient testing and development. The oscilloscope/Teensy emulator can be found in *emulator* directory. *main.cpp* file includes the cube example above and contains further instructions how to modify/use the code.
+
+1. Install [SDL2](https://www.libsdl.org/) with `brew install sdl2`
+2. Build emulator with `make`
+3. Run the emulator with `./main`

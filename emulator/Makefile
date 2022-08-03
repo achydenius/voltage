@@ -1,15 +1,20 @@
 CC = g++
-CFLAGS = -std=c++11 -Wall
-OBJS = main.o
 LIBS = -lSDL2
+CXXFLAGS = -std=c++11 -Wall -pedantic
+VOLTAGE_PATH = ../Voltage/src
+VOLTAGE_SOURCES = $(filter-out $(VOLTAGE_PATH)/Timer.cpp, $(wildcard $(VOLTAGE_PATH)/*.cpp))
+VOLTAGE_OBJECTS = $(patsubst $(VOLTAGE_PATH)/%.cpp, ./%.o, $(VOLTAGE_SOURCES))
 
 all: main
 
-main: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+main: main.o voltage.a
+	$(CC) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c -o $@ $^ $(INCLUDES)
+voltage.a: $(VOLTAGE_OBJECTS)
+	libtool -static -o $@ $(VOLTAGE_OBJECTS)
+
+%.o: $(VOLTAGE_PATH)/%.cpp
+	$(CC) $(CXXFLAGS) -D VOLTAGE_EMULATOR -c -o $@ $^
 
 clean:
 	rm -f *.o

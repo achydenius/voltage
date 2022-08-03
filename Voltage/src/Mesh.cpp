@@ -96,7 +96,7 @@ void Mesh::generateEdges() {
       if (existingEdge != nullptr) {
         existingEdge->faces.b = &face;
       } else {
-        edgeBuffer.push({edgeVertices.a, edgeVertices.b, &face, nullptr});
+        edgeBuffer.push({{edgeVertices.a, edgeVertices.b}, {&face, nullptr}});
       }
     }
   }

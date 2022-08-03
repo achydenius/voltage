@@ -7,7 +7,6 @@
 #include "utils.h"
 
 using namespace voltage;
-using namespace MeshBuilder;
 
 struct Triangle {
   uint32_t vertexIndices[3];
@@ -162,11 +161,11 @@ Mesh* MeshBuilder::createIcosphere(const float size, const uint32_t subdivisions
     }
   }
 
-  Vector3 vertices[vertexBuffer.getSize()];
+  Vector3* vertices = new Vector3[vertexBuffer.getSize()];
   std::copy(vertexBuffer.getElements(), vertexBuffer.getElements() + vertexBuffer.getSize(),
             vertices);
 
-  FaceDefinition faces[sourceTriangles.getSize()];
+  FaceDefinition* faces = new FaceDefinition[sourceTriangles.getSize()];
   for (uint32_t i = 0; i < sourceTriangles.getSize(); i++) {
     uint32_t* indices = sourceTriangles[i].vertexIndices;
     faces[i] = {indices[0], indices[1], indices[2]};
@@ -174,6 +173,9 @@ Mesh* MeshBuilder::createIcosphere(const float size, const uint32_t subdivisions
 
   Mesh* mesh = new Mesh(vertices, vertexBuffer.getSize(), faces, sourceTriangles.getSize());
   mesh->scale(size);
+
+  delete[] faces;
+  delete[] vertices;
 
   return mesh;
 }

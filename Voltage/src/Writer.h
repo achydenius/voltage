@@ -1,6 +1,8 @@
 #ifndef VOLTAGE_WRITER_H_
 #define VOLTAGE_WRITER_H_
 
+#include <cstdint>
+
 namespace voltage {
 
 class SingleDACWriter {

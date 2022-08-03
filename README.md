@@ -22,11 +22,11 @@ The rendering loop consists of three phases:
 
 The preferred rendering resolution is defined when instantiating the renderer. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
 
-## Running without oscilloscope and Arduino
+## Running without oscilloscope and Arduino (MacOS)
 
 Voltage can be used without oscilloscope and Arduino. This can be useful for a bit more convenient testing and development. The oscilloscope/Arduino emulator can be found in *emulator* directory.
 
-1. Install [SDL2](https://www.libsdl.org/) with `brew install sdl2` (on MacOS)
+1. Install [SDL2](https://www.libsdl.org/)with `brew install sdl2`
 2. Build emulator with `make`
 3. Run the emulator with `./main`
 

@@ -1,34 +1,28 @@
 #include <SDL2/SDL.h>
 
+#include "SDL2Writer.h"
+#include "emulator.h"
+
 #define VOLTAGE_EMULATOR
 #include "../Voltage/src/Voltage.h"
 
-#define WIDTH 800
-#define HEIGHT 600
+float phase = 0;
 
-int main(int argc, char **argv) {
-  SDL_Init(SDL_INIT_VIDEO);
-  SDL_Window *window = SDL_CreateWindow("Voltage Oscilloscope Emulator", SDL_WINDOWPOS_UNDEFINED,
-                                        SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
-  SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+voltage::DualDACWriter* writer = new SDL2Writer();
+voltage::Renderer renderer(10, *writer);
 
-  bool quit = false;
-  SDL_Event event;
-  while (!quit) {
-    while (SDL_PollEvent(&event) != 0) {
-      if (event.type == SDL_QUIT ||
-          (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
-        quit = 1;
-      }
-    }
+void tick() {
+  renderer.clear();
+  renderer.add({{cosf(phase), sinf(phase)}, {cosf(PI + phase), sinf(PI + phase)}});
+  renderer.render();
 
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-  }
+  phase -= 0.001;
+}
 
-  SDL_DestroyRenderer(renderer);
-  SDL_DestroyWindow(window);
-  SDL_Quit();
+int main(int argc, char** argv) {
+  Emulator emulator;
+
+  emulator.run(tick);
 
   return 0;
 }

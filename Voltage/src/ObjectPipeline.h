@@ -19,9 +19,10 @@ class ObjectPipeline {
       : renderer(renderer), clippedVertices(maxLines) {}
 
   void process(const Array<Object*>& objects, Camera& camera);
+  void transform(const Array<Object*>& objects, Camera& camera);
 
  private:
-  void process(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
+  void transform(Object* object, const Matrix& viewMatrix, const Matrix& projectionMatrix);
 };
 
 }  // namespace voltage

@@ -15,11 +15,35 @@ TIMER_CREATE(nearClip);
 TIMER_CREATE(faceCulling);
 
 void ObjectPipeline::process(const Array<Object*>& objects, Camera& camera) {
+  transform(objects, camera);
+
+  // Add all processed lines from all objects to render buffer
+  for (uint32_t i = 0; i < objects.getCapacity(); i++) {
+    Object* object = objects[i];
+
+    for (uint32_t j = 0; j < object->mesh->edgeCount; j++) {
+      Edge& edge = object->mesh->edges[j];
+      Vector4& a = edge.clipped.a->transformed;
+      Vector4& b = edge.clipped.b->transformed;
+
+      if (edge.isVisible) {
+        if (object->shading == Shading::Hidden) {
+          float brightness = edge.isCulled ? object->hiddenBrightness : object->brightness;
+          renderer->add({{a.x, a.y}, {b.x, b.y}, brightness});
+        } else {
+          renderer->add({{a.x, a.y}, {b.x, b.y}, object->brightness});
+        }
+      }
+    }
+  }
+}
+
+void ObjectPipeline::transform(const Array<Object*>& objects, Camera& camera) {
   Matrix viewMatrix = camera.getViewMatrix();
   Matrix projectionMatrix = camera.getProjectionMatrix();
 
   for (uint32_t i = 0; i < objects.getCapacity(); i++) {
-    process(objects[i], viewMatrix, projectionMatrix);
+    transform(objects[i], viewMatrix, projectionMatrix);
   }
 
   TIMER_SAVE(transform);
@@ -31,8 +55,8 @@ void ObjectPipeline::process(const Array<Object*>& objects, Camera& camera) {
   TIMER_PRINT(faceCulling);
 }
 
-void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
-                             const Matrix& projectionMatrix) {
+void ObjectPipeline::transform(Object* object, const Matrix& viewMatrix,
+                               const Matrix& projectionMatrix) {
   Mesh* mesh = object->mesh;
 
   // Transform camera to model space and perform face culling.
@@ -125,20 +149,4 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
     clippedVertices[i].perspectiveDivide();
   }
   TIMER_STOP(transform);
-
-  // Add processed lines to render buffer
-  for (uint32_t i = 0; i < mesh->edgeCount; i++) {
-    Edge& edge = mesh->edges[i];
-    Vector4& a = edge.clipped.a->transformed;
-    Vector4& b = edge.clipped.b->transformed;
-
-    if (edge.isVisible) {
-      if (object->shading == Shading::Hidden) {
-        float brightness = edge.isCulled ? object->hiddenBrightness : object->brightness;
-        renderer->add({{a.x, a.y}, {b.x, b.y}, brightness});
-      } else {
-        renderer->add({{a.x, a.y}, {b.x, b.y}, object->brightness});
-      }
-    }
-  }
 }

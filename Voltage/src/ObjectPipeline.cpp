@@ -126,15 +126,6 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
   }
   TIMER_STOP(transform);
 
-  // Calculate object's distance to light (camera) in view space
-  Vector4 objectPosition =
-      Vector4Transform({object->mesh->boundingSphere.x, object->mesh->boundingSphere.y,
-                        object->mesh->boundingSphere.z, 1.0},
-                       modelViewMatrix);
-  float lightDistance =
-      Vector3Distance({objectPosition.x, objectPosition.y, objectPosition.z}, {0, 0, 0});
-  float brightness = 1.0 - Clamp(pow(lightDistance / renderer->lightIntensity, 3), 0, 1.0);
-
   // Add processed lines to render buffer
   for (uint32_t i = 0; i < mesh->edgeCount; i++) {
     Edge& edge = mesh->edges[i];
@@ -142,9 +133,7 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
     Vector4& b = edge.clipped.b->transformed;
 
     if (edge.isVisible) {
-      if (object->shading == Shading::Distance) {
-        renderer->add({{a.x, a.y}, {b.x, b.y}, brightness});
-      } else if (object->shading == Shading::Hidden) {
+      if (object->shading == Shading::Hidden) {
         float brightness = edge.isCulled ? object->hiddenBrightness : object->brightness;
         renderer->add({{a.x, a.y}, {b.x, b.y}, brightness});
       } else {

@@ -34,8 +34,6 @@ class Renderer {
   Vector2 blankingPoint = {1.0, 1.0};
 
  public:
-  float lightIntensity = 10;
-
   Renderer(uint8_t resolutionBits, const DualDACWriter& lineWriter,
            SingleDACWriter* brightnessWriter = nullptr, uint32_t maxLines = defaultMaxLines,
            uint32_t maxPoints = defaultMaxPoints)

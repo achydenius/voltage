@@ -7,7 +7,7 @@
 namespace voltage {
 
 enum class Culling { Front, Back, None };
-enum class Shading { None, Hidden, Distance };
+enum class Shading { None, Hidden };
 
 class Object {
  public:

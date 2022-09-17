@@ -37,7 +37,7 @@ static int clipTest(float p, float q, float& u1, float& u2) {
 
 // Clip a line to viewport with Liang–Barsky algorithm
 // Implementation idea from: https://www.geeksforgeeks.org/liang-barsky-algorithm/
-inline bool clipLine(Vector2& a, Vector2& b, const Viewport& vp) {
+inline bool clipLine2D(Vector2& a, Vector2& b, const Viewport& vp) {
   float u1 = 0;
   float u2 = 1.0;
   Vector2 d = Vector2Subtract(b, a);
@@ -62,65 +62,116 @@ inline bool clipLine(Vector2& a, Vector2& b, const Viewport& vp) {
 // Return values for 3D clipping
 enum class ClipResult { Inside, Outside, AClipped, BClipped, BothClipped };
 
-enum class ClipPlane { Near, Far };
-enum { CodeNear = 0x1, CodeFar = 0x2 };
-typedef int unsigned OutCode;
+enum {
+  OutCodeInside = 0,
+  OutCodeNear = 0x1,
+  OutCodeFar = 0x2,
+  OutCodeLeft = 0x4,
+  OutCodeRight = 0x8,
+  OutCodeTop = 0x10,
+  OutCodeBottom = 0x20
+};
+typedef uint32_t OutCode;
 
 inline OutCode getOutCode(const Vector4& vector) {
+  float epsilon = 0.000001;
   OutCode outCode = 0;
-  if (vector.z < -vector.w) {
-    outCode |= CodeNear;
+
+  if (vector.x + vector.w < -epsilon) {
+    outCode |= OutCodeLeft;
+  } else if (vector.x - vector.w > epsilon) {
+    outCode |= OutCodeRight;
   }
-  if (-vector.z < -vector.w) {
-    outCode |= CodeFar;
+
+  if (vector.y + vector.w < -epsilon) {
+    outCode |= OutCodeTop;
+  } else if (vector.y - vector.w > epsilon) {
+    outCode |= OutCodeBottom;
   }
+
+  if (vector.z + vector.w < -epsilon) {
+    outCode |= OutCodeNear;
+  } else if (vector.z - vector.w > epsilon) {
+    outCode |= OutCodeFar;
+  }
+
   return outCode;
 }
 
-inline float getDistanceToPlane(const Vector4& vector, const ClipPlane plane) {
-  return plane == ClipPlane::Near ? vector.z + vector.w : -vector.z + vector.w;
+inline float getDistanceToPlane(const Vector4& vector, const OutCode outCode) {
+  if (outCode & OutCodeLeft) {
+    return vector.x + vector.w;
+  } else if (outCode & OutCodeRight) {
+    return -vector.x + vector.w;
+  } else if (outCode & OutCodeTop) {
+    return vector.y + vector.w;
+  } else if (outCode & OutCodeBottom) {
+    return -vector.y + vector.w;
+  } else if (outCode & OutCodeNear) {
+    return vector.z + vector.w;
+  } else if (outCode & OutCodeFar) {
+    return -vector.z + vector.w;
+  }
 }
 
-inline Vector4 clipAgainstPlane(const Vector4& a, const Vector4& b, const ClipPlane plane) {
-  float da = getDistanceToPlane(a, plane);
-  float db = getDistanceToPlane(b, plane);
+inline Vector4 clipAgainstPlane(const Vector4& a, const Vector4& b, const OutCode outCode) {
+  float da = getDistanceToPlane(a, outCode);
+  float db = getDistanceToPlane(b, outCode);
   float t = da / (da - db);
   return Vector4Lerp(a, b, t);
 }
 
-inline ClipResult clipLineNearAndFar(Vector4& a, Vector4& b) {
+// Clip line in homogenous clip space
+// Clipping against all planes of the view frustum is done similarly to Cohen-Sutherland algorithm:
+// https://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
+inline ClipResult clipLine3D(Vector4& a, Vector4& b) {
   OutCode aOutCode = getOutCode(a);
   OutCode bOutCode = getOutCode(b);
 
-  // Both outside
-  if (aOutCode & bOutCode) {
-    return ClipResult::Outside;
+  bool aClipped = false;
+  bool bClipped = false;
+  while (true) {
+    // Both outside
+    if (aOutCode & bOutCode) {
+      return ClipResult::Outside;
+    }
+
+    // Both inside
+    if (!(aOutCode | bOutCode)) {
+      break;
+    }
+
+    OutCode outCodeOut = aOutCode ? aOutCode : bOutCode;
+
+    Vector4 clipped;
+    if (outCodeOut & OutCodeLeft) {
+      clipped = clipAgainstPlane(a, b, OutCodeLeft);
+    } else if (outCodeOut & OutCodeRight) {
+      clipped = clipAgainstPlane(a, b, OutCodeRight);
+    } else if (outCodeOut & OutCodeTop) {
+      clipped = clipAgainstPlane(a, b, OutCodeTop);
+    } else if (outCodeOut & OutCodeBottom) {
+      clipped = clipAgainstPlane(a, b, OutCodeBottom);
+    } else if (outCodeOut & OutCodeNear) {
+      clipped = clipAgainstPlane(a, b, OutCodeNear);
+    } else if (outCodeOut & OutCodeFar) {
+      clipped = clipAgainstPlane(a, b, OutCodeFar);
+    }
+
+    if (outCodeOut == aOutCode) {
+      a = clipped;
+      aOutCode = getOutCode(a);
+      aClipped = true;
+    } else {
+      b = clipped;
+      bOutCode = getOutCode(b);
+      bClipped = true;
+    }
   }
 
-  // Both inside
-  if (!(aOutCode | bOutCode)) {
-    return ClipResult::Inside;
-  }
-
-  // A is clipped
-  if (aOutCode & CodeNear) {
-    a = clipAgainstPlane(a, b, ClipPlane::Near);
-  }
-  if (aOutCode & CodeFar) {
-    a = clipAgainstPlane(a, b, ClipPlane::Far);
-  }
-
-  // B is clipped
-  if (bOutCode & CodeNear) {
-    b = clipAgainstPlane(a, b, ClipPlane::Near);
-  }
-  if (bOutCode & CodeFar) {
-    b = clipAgainstPlane(a, b, ClipPlane::Far);
-  }
-
-  if (aOutCode && bOutCode) {
+  if (aClipped && bClipped) {
     return ClipResult::BothClipped;
-  } else if (aOutCode) {
+  } else if (aClipped) {
     return ClipResult::AClipped;
   } else {
     return ClipResult::BClipped;

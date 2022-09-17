@@ -55,7 +55,7 @@ void Renderer::render() {
     Line line = lines[i];
     Vector2 a = line.a;
     Vector2 b = line.b;
-    if (clipLine(a, b, viewport)) {
+    if (clipLine2D(a, b, viewport)) {
       clippedLines.push({a, b, lines[i].brightness});
     }
   }

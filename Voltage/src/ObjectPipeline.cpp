@@ -92,7 +92,7 @@ void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
     Vector4 a = ap->transformed;
     Vector4 b = bp->transformed;
 
-    ClipResult clipResult = clipLineNearAndFar(a, b);
+    ClipResult clipResult = clipLine3D(a, b);
 
     if (clipResult == ClipResult::Outside) {
       continue;

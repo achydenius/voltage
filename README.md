@@ -22,6 +22,14 @@ The rendering loop consists of three phases:
 
 The preferred rendering resolution is defined when instantiating the renderer. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
 
+## Importing 3D meshes from third-party software
+
+3D meshes in [.obj file format](https://en.wikipedia.org/wiki/Wavefront_.obj_file) can be imported to Voltage with `parse-obj.py` Python script in *utils* directory. The script takes two command line arguments: the name of the obj file to be imported, and a name for a variable, which can be then accessed in Voltage code.
+
+For example, running `./parse-obj.py example.obj mesh` outputs code with the mesh definition in `voltage::Mesh* mesh` variable, which can be then pasted to the sketch. See [import.ino](examples/import.ino) for an example.
+
+Alternatively, the mesh can be imported by first redirecting the output of the parser to a file (e.g. with `./parse-obj.py example.obj > example.h`), copying the file to the sketch's directory, and then including the file in the sketch with `#include "example.h`.
+
 ## Setting up external DAC for brightness control
 
 An external [Microchip MCP4922](https://www.microchip.com/en-us/product/MCP4922) DAC can be used for setting the brightness of individual lines. MCP4922 can be used with Teensy 3.6 by using the following connections:

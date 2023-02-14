@@ -23,8 +23,6 @@ class Rasterizer {
 
  private:
   inline uint32_t transform(float value) const;
-  void drawLineLow(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const;
-  void drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const;
 };
 
 }  // namespace voltage

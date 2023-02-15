@@ -16,18 +16,24 @@
 namespace voltage {
 
 class BrightnessTransform {
+ protected:
+  const uint32_t maxValue;
+
  public:
+  BrightnessTransform(const DACWriter* writer) : maxValue(writer->getMaxValue()) {}
   virtual uint32_t transform(float value) const = 0;
 };
 
 class LinearBrightnessTransform : public BrightnessTransform {
  public:
-  inline uint32_t transform(float value) const { return (uint32_t)(value * 4095.0); }
+  LinearBrightnessTransform(const DACWriter* writer) : BrightnessTransform(writer) {}
+  inline uint32_t transform(float value) const { return (uint32_t)(value * maxValue); }
 };
 
 class InvertedLinearBrightnessTransform : public BrightnessTransform {
  public:
-  inline uint32_t transform(float value) const { return (uint32_t)((1.0 - value) * 4095.0); }
+  InvertedLinearBrightnessTransform(const DACWriter* writer) : BrightnessTransform(writer) {}
+  inline uint32_t transform(float value) const { return (uint32_t)((1.0 - value) * maxValue); }
 };
 
 class Renderer {

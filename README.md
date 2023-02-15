@@ -105,7 +105,7 @@ Initialize the `Renderer` class as follows:
 
 ```cpp
 MCP4922Writer *brightnessWriter = new MCP4922Writer();
-BrightnessTransform *brightnessTransform = new LinearBrightnessTransform();
+BrightnessTransform *brightnessTransform = new LinearBrightnessTransform(brightnessWriter);
 Renderer renderer(brightnessWriter, brightnessTransform);
 ```
 

@@ -105,7 +105,8 @@ Initialize the `Renderer` class as follows:
 
 ```cpp
 MCP4922Writer *brightnessWriter = new MCP4922Writer();
-Renderer renderer(12, brightnessWriter);
+BrightnessTransform *brightnessTransform = new LinearBrightnessTransform();
+Renderer renderer(12, brightnessWriter, brightnessTransform);
 ```
 
 Enable hidden line shading and set the hidden line brightness:

@@ -75,15 +75,15 @@ void Renderer::render() {
     // Turn off beam and move it to the next position to be drawn
     if (brightnessWriter != nullptr &&
         (beamPosition.x != clippedLines[i].a.x || beamPosition.y != clippedLines[i].a.y)) {
-      brightnessWriter->write(transformBrightness(0));
+      brightnessWriter->write(brightnessTransform->transform(0));
       rasterizer.drawLine(beamPosition, clippedLines[i].a, blankingDrawIncrement);
 
       // Interpolate brightness in order to avoid aliasing artifacts
       for (float z = 0; z < clippedLines[i].brightness; z += blankingBrightnessIncrement) {
         rasterizer.drawPoint(clippedLines[i].a);
-        brightnessWriter->write(transformBrightness(z));
+        brightnessWriter->write(brightnessTransform->transform(z));
       }
-      brightnessWriter->write(transformBrightness(clippedLines[i].brightness));
+      brightnessWriter->write(brightnessTransform->transform(clippedLines[i].brightness));
     }
 
     rasterizer.drawLine(clippedLines[i].a, clippedLines[i].b);
@@ -91,12 +91,12 @@ void Renderer::render() {
   }
 
   if (brightnessWriter != nullptr) {
-    brightnessWriter->write(transformBrightness(0));
+    brightnessWriter->write(brightnessTransform->transform(0));
   }
 
   for (uint32_t i = 0; i < clippedPoints.getSize(); i++) {
     if (brightnessWriter != nullptr) {
-      brightnessWriter->write(transformBrightness(clippedPoints[i].brightness));
+      brightnessWriter->write(brightnessTransform->transform(clippedPoints[i].brightness));
     }
     rasterizer.drawPoint({clippedPoints[i].x, clippedPoints[i].y});
   }
@@ -110,12 +110,8 @@ void Renderer::render() {
 
   // Turn off beam or move it outside the screen
   if (brightnessWriter != nullptr) {
-    brightnessWriter->write(transformBrightness(1.0));
+    brightnessWriter->write(brightnessTransform->transform(1.0));
   } else {
     rasterizer.drawPoint(blankingPoint);
   }
 }
-
-uint32_t Renderer::transformBrightness(float value) const {
-  return (uint32_t)((1.0 - value) * 4095.0);
-};

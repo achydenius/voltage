@@ -10,9 +10,9 @@ void Rasterizer::drawPoint(const Vector2 &point) const {
   dacWriter.write(transform(point.x) << scaleBits, transform(point.y) << scaleBits);
 }
 
-// Draw a line with DDA line drawing algorithm:
+// Draw a line with DDA line drawing algorithm (with increment feature added):
 // https://www.geeksforgeeks.org/dda-line-generation-algorithm-computer-graphics/
-void Rasterizer::drawLine(const Vector2 &a, const Vector2 &b) const {
+void Rasterizer::drawLine(const Vector2 &a, const Vector2 &b, const uint32_t increment) const {
   int32_t x0 = transform(a.x);
   int32_t y0 = transform(a.y);
   int32_t x1 = transform(b.x);
@@ -22,13 +22,13 @@ void Rasterizer::drawLine(const Vector2 &a, const Vector2 &b) const {
   float dy = y1 - y0;
 
   int32_t steps = abs(dx) > abs(dy) ? abs(dx) : abs(dy);
-  float ix = dx / (float)steps;
-  float iy = dy / (float)steps;
+  float ix = dx / steps * increment;
+  float iy = dy / steps * increment;
 
   float x = x0;
   float y = y0;
 
-  for (int32_t i = 0; i <= steps; i++) {
+  for (int32_t i = 0; i <= steps; i += increment) {
     dacWriter.write((uint32_t)x << scaleBits, (uint32_t)y << scaleBits);
     x += ix;
     y += iy;

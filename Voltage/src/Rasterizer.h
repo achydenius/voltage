@@ -19,7 +19,7 @@ class Rasterizer {
         scaleValueHalf(pow(2, resolutionBits - 1) - 1) {}
 
   void drawPoint(const Vector2& point) const;
-  void drawLine(const Vector2& a, const Vector2& b) const;
+  void drawLine(const Vector2& a, const Vector2& b, const uint32_t increment = 1) const;
 
  private:
   inline uint32_t transform(float value) const;

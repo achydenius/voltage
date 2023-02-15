@@ -72,11 +72,20 @@ void Renderer::render() {
 
   TIMER_START(rasterize);
   for (uint32_t i = 0; i < clippedLines.getSize(); i++) {
-    if (brightnessWriter != nullptr) {
+    // Turn off beam and move it to the next position to be drawn
+    if (brightnessWriter != nullptr &&
+        (beamPosition.x != clippedLines[i].a.x || beamPosition.y != clippedLines[i].a.y)) {
+      brightnessWriter->write(transformBrightness(0));
+      rasterizer.drawLine(beamPosition, clippedLines[i].a, blankingIncrement);
       brightnessWriter->write(transformBrightness(clippedLines[i].brightness));
     }
 
     rasterizer.drawLine(clippedLines[i].a, clippedLines[i].b);
+    beamPosition = {clippedLines[i].b.x, clippedLines[i].b.y};
+  }
+
+  if (brightnessWriter != nullptr) {
+    brightnessWriter->write(transformBrightness(0));
   }
 
   for (uint32_t i = 0; i < clippedPoints.getSize(); i++) {
@@ -93,10 +102,10 @@ void Renderer::render() {
   TIMER_PRINT(viewportClip);
   TIMER_PRINT(rasterize);
 
+  // Turn off beam or move it outside the screen
   if (brightnessWriter != nullptr) {
-    brightnessWriter->write(4095);
+    brightnessWriter->write(transformBrightness(1.0));
   } else {
-    // Move beam to blanking point (i.e. outside the screen) when finished drawing
     rasterizer.drawPoint(blankingPoint);
   }
 }

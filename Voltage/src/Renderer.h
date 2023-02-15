@@ -18,6 +18,7 @@ namespace voltage {
 class Renderer {
   static const uint32_t defaultMaxLines = 1000;
   static const uint32_t defaultMaxPoints = 1000;
+  static const uint32_t blankingIncrement = 16;
   ObjectPipeline pipeline;
   const Rasterizer rasterizer;
   const SingleDACWriter* brightnessWriter;
@@ -25,6 +26,7 @@ class Renderer {
   Buffer<Point> points;
   Buffer<Line> clippedLines;
   Buffer<Point> clippedPoints;
+  Vector2 beamPosition = {0, 0};
 
 #ifndef VOLTAGE_EMULATOR
   Teensy36Writer teensyLineWriter;

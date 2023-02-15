@@ -18,7 +18,8 @@ namespace voltage {
 class Renderer {
   static const uint32_t defaultMaxLines = 1000;
   static const uint32_t defaultMaxPoints = 1000;
-  static const uint32_t blankingIncrement = 16;
+  static const uint32_t blankingDrawIncrement = 16;
+  const float blankingBrightnessIncrement = 0.015;
   ObjectPipeline pipeline;
   const Rasterizer rasterizer;
   const SingleDACWriter* brightnessWriter;

@@ -76,7 +76,13 @@ void Renderer::render() {
     if (brightnessWriter != nullptr &&
         (beamPosition.x != clippedLines[i].a.x || beamPosition.y != clippedLines[i].a.y)) {
       brightnessWriter->write(transformBrightness(0));
-      rasterizer.drawLine(beamPosition, clippedLines[i].a, blankingIncrement);
+      rasterizer.drawLine(beamPosition, clippedLines[i].a, blankingDrawIncrement);
+
+      // Interpolate brightness in order to avoid aliasing artifacts
+      for (float z = 0; z < clippedLines[i].brightness; z += blankingBrightnessIncrement) {
+        rasterizer.drawPoint(clippedLines[i].a);
+        brightnessWriter->write(transformBrightness(z));
+      }
       brightnessWriter->write(transformBrightness(clippedLines[i].brightness));
     }
 

@@ -19,12 +19,10 @@ class Rasterizer {
         scaleValueHalf(pow(2, resolutionBits - 1) - 1) {}
 
   void drawPoint(const Vector2& point) const;
-  void drawLine(const Vector2& a, const Vector2& b) const;
+  void drawLine(const Vector2& a, const Vector2& b, const uint32_t increment = 1) const;
 
  private:
   inline uint32_t transform(float value) const;
-  void drawLineLow(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const;
-  void drawLineHigh(int32_t x0, int32_t y0, int32_t x1, int32_t y1) const;
 };
 
 }  // namespace voltage

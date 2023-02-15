@@ -15,16 +15,35 @@
 
 namespace voltage {
 
+class BrightnessTransform {
+ public:
+  virtual uint32_t transform(float value) const = 0;
+};
+
+class LinearBrightnessTransform : public BrightnessTransform {
+ public:
+  inline uint32_t transform(float value) const { return (uint32_t)(value * 4095.0); }
+};
+
+class InvertedLinearBrightnessTransform : public BrightnessTransform {
+ public:
+  inline uint32_t transform(float value) const { return (uint32_t)((1.0 - value) * 4095.0); }
+};
+
 class Renderer {
   static const uint32_t defaultMaxLines = 1000;
   static const uint32_t defaultMaxPoints = 1000;
+  static const uint32_t blankingDrawIncrement = 16;
+  const float blankingBrightnessIncrement = 0.015;
   ObjectPipeline pipeline;
   const Rasterizer rasterizer;
   const SingleDACWriter* brightnessWriter;
+  const BrightnessTransform* brightnessTransform;
   Buffer<Line> lines;
   Buffer<Point> points;
   Buffer<Line> clippedLines;
   Buffer<Point> clippedPoints;
+  Vector2 beamPosition = {0, 0};
 
 #ifndef VOLTAGE_EMULATOR
   Teensy36Writer teensyLineWriter;
@@ -37,11 +56,13 @@ class Renderer {
   float lightIntensity = 10;
 
   Renderer(uint8_t resolutionBits, const DualDACWriter& lineWriter,
-           SingleDACWriter* brightnessWriter = nullptr, uint32_t maxLines = defaultMaxLines,
+           SingleDACWriter* brightnessWriter = nullptr,
+           BrightnessTransform* brightnessTransform = nullptr, uint32_t maxLines = defaultMaxLines,
            uint32_t maxPoints = defaultMaxPoints)
       : pipeline(this, maxLines),
         rasterizer(lineWriter, resolutionBits),
         brightnessWriter(brightnessWriter),
+        brightnessTransform(brightnessTransform),
         lines(maxLines),
         points(maxPoints),
         clippedLines(maxLines),
@@ -49,8 +70,10 @@ class Renderer {
 
 #ifndef VOLTAGE_EMULATOR
   Renderer(uint8_t resolutionBits, SingleDACWriter* brightnessWriter = nullptr,
-           uint32_t maxLines = defaultMaxLines, uint32_t maxPoints = defaultMaxPoints)
-      : Renderer(resolutionBits, teensyLineWriter, brightnessWriter, maxLines, maxPoints) {}
+           BrightnessTransform* brightnessTransform = nullptr, uint32_t maxLines = defaultMaxLines,
+           uint32_t maxPoints = defaultMaxPoints)
+      : Renderer(resolutionBits, teensyLineWriter, brightnessWriter, brightnessTransform, maxLines,
+                 maxPoints) {}
 #endif
 
   void setViewport(const Viewport& viewport);
@@ -62,9 +85,6 @@ class Renderer {
   void add(const Array<Object*>& objects, Camera& camera);
   void addViewport();
   void render();
-
- private:
-  inline uint32_t transformBrightness(float value) const;
 };
 
 }  // namespace voltage

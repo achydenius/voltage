@@ -72,16 +72,31 @@ void Renderer::render() {
 
   TIMER_START(rasterize);
   for (uint32_t i = 0; i < clippedLines.getSize(); i++) {
-    if (brightnessWriter != nullptr) {
-      brightnessWriter->write(transformBrightness(clippedLines[i].brightness));
+    // Turn off beam and move it to the next position to be drawn
+    if (brightnessWriter != nullptr &&
+        (beamPosition.x != clippedLines[i].a.x || beamPosition.y != clippedLines[i].a.y)) {
+      brightnessWriter->write(brightnessTransform->transform(0));
+      rasterizer.drawLine(beamPosition, clippedLines[i].a, blankingDrawIncrement);
+
+      // Interpolate brightness in order to avoid aliasing artifacts
+      for (float z = 0; z < clippedLines[i].brightness; z += blankingBrightnessIncrement) {
+        rasterizer.drawPoint(clippedLines[i].a);
+        brightnessWriter->write(brightnessTransform->transform(z));
+      }
+      brightnessWriter->write(brightnessTransform->transform(clippedLines[i].brightness));
     }
 
     rasterizer.drawLine(clippedLines[i].a, clippedLines[i].b);
+    beamPosition = {clippedLines[i].b.x, clippedLines[i].b.y};
+  }
+
+  if (brightnessWriter != nullptr) {
+    brightnessWriter->write(brightnessTransform->transform(0));
   }
 
   for (uint32_t i = 0; i < clippedPoints.getSize(); i++) {
     if (brightnessWriter != nullptr) {
-      brightnessWriter->write(transformBrightness(clippedPoints[i].brightness));
+      brightnessWriter->write(brightnessTransform->transform(clippedPoints[i].brightness));
     }
     rasterizer.drawPoint({clippedPoints[i].x, clippedPoints[i].y});
   }
@@ -93,14 +108,10 @@ void Renderer::render() {
   TIMER_PRINT(viewportClip);
   TIMER_PRINT(rasterize);
 
+  // Turn off beam or move it outside the screen
   if (brightnessWriter != nullptr) {
-    brightnessWriter->write(4095);
+    brightnessWriter->write(brightnessTransform->transform(1.0));
   } else {
-    // Move beam to blanking point (i.e. outside the screen) when finished drawing
     rasterizer.drawPoint(blankingPoint);
   }
 }
-
-uint32_t Renderer::transformBrightness(float value) const {
-  return (uint32_t)((1.0 - value) * 4095.0);
-};

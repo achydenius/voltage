@@ -55,12 +55,11 @@ class Renderer {
  public:
   float lightIntensity = 10;
 
-  Renderer(uint8_t resolutionBits, const DualDACWriter& lineWriter,
-           SingleDACWriter* brightnessWriter = nullptr,
+  Renderer(const DualDACWriter& lineWriter, SingleDACWriter* brightnessWriter = nullptr,
            BrightnessTransform* brightnessTransform = nullptr, uint32_t maxLines = defaultMaxLines,
            uint32_t maxPoints = defaultMaxPoints)
       : pipeline(this, maxLines),
-        rasterizer(lineWriter, resolutionBits),
+        rasterizer(lineWriter),
         brightnessWriter(brightnessWriter),
         brightnessTransform(brightnessTransform),
         lines(maxLines),
@@ -69,11 +68,10 @@ class Renderer {
         clippedPoints(maxPoints) {}
 
 #ifndef VOLTAGE_EMULATOR
-  Renderer(uint8_t resolutionBits, SingleDACWriter* brightnessWriter = nullptr,
+  Renderer(SingleDACWriter* brightnessWriter = nullptr,
            BrightnessTransform* brightnessTransform = nullptr, uint32_t maxLines = defaultMaxLines,
            uint32_t maxPoints = defaultMaxPoints)
-      : Renderer(resolutionBits, teensyLineWriter, brightnessWriter, brightnessTransform, maxLines,
-                 maxPoints) {}
+      : Renderer(teensyLineWriter, brightnessWriter, brightnessTransform, maxLines, maxPoints) {}
 #endif
 
   void setViewport(const Viewport& viewport);

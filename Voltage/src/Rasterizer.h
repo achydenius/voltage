@@ -8,15 +8,11 @@ namespace voltage {
 
 class Rasterizer {
   const DualDACWriter& dacWriter;
-  static const uint8_t maxResolutionBits = 12;
-  const uint8_t scaleBits;
   const uint32_t scaleValueHalf;
 
  public:
-  Rasterizer(const DualDACWriter& dacWriter, uint8_t resolutionBits)
-      : dacWriter(dacWriter),
-        scaleBits(Rasterizer::maxResolutionBits - resolutionBits),
-        scaleValueHalf(pow(2, resolutionBits - 1) - 1) {}
+  Rasterizer(const DualDACWriter& dacWriter)
+      : dacWriter(dacWriter), scaleValueHalf((uint32_t)(dacWriter.getMaxValue() * 0.5)) {}
 
   void drawPoint(const Vector2& point) const;
   void drawLine(const Vector2& a, const Vector2& b, const uint32_t increment = 1) const;

@@ -1,6 +1,6 @@
 #include <Voltage.h>
 
-voltage::Renderer renderer(10);
+voltage::Renderer renderer();
 
 voltage::Mesh *mesh = voltage::MeshBuilder::createIcosphere(1.0, 3);
 voltage::Object *object = new voltage::Object(mesh);

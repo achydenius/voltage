@@ -16,19 +16,18 @@ class Emulator {
   SDL_Texture *texture;
 
   const unsigned int resolution;
-  const int size;
   unsigned int *pixels;
 
  public:
-  Emulator(const unsigned int resolution) : resolution(resolution), size(1 << resolution) {
-    pixels = new unsigned int[size * size];
+  Emulator(const unsigned int resolution) : resolution(resolution) {
+    pixels = new unsigned int[resolution * resolution];
 
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("Voltage Oscilloscope Emulator", SDL_WINDOWPOS_UNDEFINED,
-                              SDL_WINDOWPOS_UNDEFINED, size, size, 0);
+                              SDL_WINDOWPOS_UNDEFINED, resolution, resolution, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
-                                size, size);
+                                resolution, resolution);
   }
 
   ~Emulator() { delete[] pixels; }
@@ -39,7 +38,7 @@ class Emulator {
     bool quit = false;
     SDL_Event event;
     while (!quit) {
-      SDL_UpdateTexture(texture, NULL, pixels, size * sizeof(unsigned int));
+      SDL_UpdateTexture(texture, NULL, pixels, resolution * sizeof(unsigned int));
 
       while (SDL_PollEvent(&event) != 0) {
         if (event.type == SDL_QUIT ||
@@ -48,7 +47,7 @@ class Emulator {
         }
       }
 
-      for (int i = 0; i < size * size; i++) {
+      for (int i = 0; i < resolution * resolution; i++) {
         pixels[i] = 0;
       }
       callback();

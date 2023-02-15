@@ -7,7 +7,7 @@
 using namespace voltage;
 
 void Rasterizer::drawPoint(const Vector2 &point) const {
-  dacWriter.write(transform(point.x) << scaleBits, transform(point.y) << scaleBits);
+  dacWriter.write(transform(point.x), transform(point.y));
 }
 
 // Draw a line with DDA line drawing algorithm (with increment feature added):
@@ -29,7 +29,7 @@ void Rasterizer::drawLine(const Vector2 &a, const Vector2 &b, const uint32_t inc
   float y = y0;
 
   for (int32_t i = 0; i <= steps; i += increment) {
-    dacWriter.write((uint32_t)x << scaleBits, (uint32_t)y << scaleBits);
+    dacWriter.write((uint32_t)x, (uint32_t)y);
     x += ix;
     y += iy;
   }

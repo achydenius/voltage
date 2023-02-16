@@ -9,8 +9,8 @@
 #include "Camera.h"
 #include "Clipper.h"
 #include "Object.h"
-#include "ObjectPipeline.h"
 #include "Rasterizer.h"
+#include "Transform3D.h"
 #include "types.h"
 
 namespace voltage {
@@ -41,7 +41,7 @@ class Renderer {
   static const uint32_t blankingDrawIncrement = 16;
   const float blankingBrightnessIncrement = 0.015;
   const uint32_t increment;
-  ObjectPipeline pipeline;
+  Transform3D transform3D;
   const Rasterizer rasterizer;
   const SingleDACWriter* brightnessWriter;
   const BrightnessTransform* brightnessTransform;
@@ -61,7 +61,7 @@ class Renderer {
            SingleDACWriter* brightnessWriter = nullptr,
            BrightnessTransform* brightnessTransform = nullptr, uint32_t maxLines = defaultMaxLines)
       : increment(increment),
-        pipeline(this, maxLines),
+        transform3D(this, maxLines),
         rasterizer(lineWriter),
         brightnessWriter(brightnessWriter),
         brightnessTransform(brightnessTransform),

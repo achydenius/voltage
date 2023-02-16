@@ -24,7 +24,7 @@ void Renderer::add(Object* object, Camera& camera) {
 }
 
 void Renderer::add(const Array<Object*>& objects, Camera& camera) {
-  pipeline.process(objects, camera);
+  transform3D.transform(objects, camera);
 }
 
 void Renderer::addViewport() {

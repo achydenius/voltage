@@ -3,9 +3,9 @@
 #endif
 
 #include "Clipper.h"
-#include "ObjectPipeline.h"
 #include "Renderer.h"
 #include "Timer.h"
+#include "Transform3D.h"
 #include "utils.h"
 
 using namespace voltage;
@@ -14,12 +14,12 @@ TIMER_CREATE(transform);
 TIMER_CREATE(nearClip);
 TIMER_CREATE(faceCulling);
 
-void ObjectPipeline::process(const Array<Object*>& objects, Camera& camera) {
+void Transform3D::transform(const Array<Object*>& objects, Camera& camera) {
   Matrix viewMatrix = camera.getViewMatrix();
   Matrix projectionMatrix = camera.getProjectionMatrix();
 
   for (uint32_t i = 0; i < objects.getCapacity(); i++) {
-    process(objects[i], viewMatrix, projectionMatrix);
+    transform(objects[i], viewMatrix, projectionMatrix);
   }
 
   TIMER_SAVE(transform);
@@ -31,8 +31,8 @@ void ObjectPipeline::process(const Array<Object*>& objects, Camera& camera) {
   TIMER_PRINT(faceCulling);
 }
 
-void ObjectPipeline::process(Object* object, const Matrix& viewMatrix,
-                             const Matrix& projectionMatrix) {
+void Transform3D::transform(Object* object, const Matrix& viewMatrix,
+                            const Matrix& projectionMatrix) {
   Mesh* mesh = object->mesh;
 
   // Transform camera to model space and perform face culling.

@@ -20,7 +20,7 @@ The rendering loop consists of three phases:
 2. Add geometry to be rendered with the overloaded `add` method
 3. Render all the added geometry with `render` method call
 
-The preferred rendering resolution is defined when instantiating the renderer. Usually values from 10 to 12 (Teensy's maximum resolution) seem to work nicely. Higher resolution produces a smoother result but requires more CPU power, thus reducing the amount of primitives that can be rendered without flickering.
+Voltage's rendering resolution is 12 bits, which is Teensy's maximum resolution. By default, every value along the line being drawn is being lit, yielding a smooth result, but requiring significant amount of CPU power and potentially causing flickering. The rendering can be made more performant by drawing only every nth pixel, which can be configured by setting a larger `increment` argument (default being one) when instantiating the renderer. For example, increment value of two usually improves the performance quite a lot without any significant visual changes.
 
 ## Importing 3D meshes from third-party software
 
@@ -56,7 +56,7 @@ More examples can be found in [examples](examples/) directory.
 ```cpp
 #include <Voltage.h>
 
-voltage::Renderer renderer(12);
+voltage::Renderer renderer;
 
 void setup() {}
 
@@ -80,7 +80,7 @@ void loop() {
 
 using namespace voltage;
 
-Renderer renderer(10);
+Renderer renderer;
 Mesh *mesh = MeshBuilder::createCube(1.0);
 Object *object = new Object(mesh);
 FreeCamera camera;
@@ -105,8 +105,8 @@ Initialize the `Renderer` class as follows:
 
 ```cpp
 MCP4922Writer *brightnessWriter = new MCP4922Writer();
-BrightnessTransform *brightnessTransform = new LinearBrightnessTransform();
-Renderer renderer(12, brightnessWriter, brightnessTransform);
+BrightnessTransform *brightnessTransform = new LinearBrightnessTransform(brightnessWriter);
+Renderer renderer(brightnessWriter, brightnessTransform);
 ```
 
 Enable hidden line shading and set the hidden line brightness:

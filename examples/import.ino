@@ -21,7 +21,7 @@ voltage::FaceDefinition meshFaces[] = {
     {6, 4, 24, 27},   {6, 7, 29, 28},   {7, 1, 30, 29},   {1, 0, 31, 30},   {0, 6, 28, 31}};
 voltage::Mesh* mesh = new voltage::Mesh(meshVertices, 32, meshFaces, 30);
 
-Renderer renderer(10);
+Renderer renderer(2);
 Object* object = new Object(mesh);
 LookAtCamera camera;
 

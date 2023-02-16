@@ -4,14 +4,13 @@
 
 class SDL2Writer : public voltage::DualDACWriter {
   const unsigned int resolution;
-  const unsigned int shift;
   unsigned int *buffer;
 
  public:
   SDL2Writer(const unsigned int resolution, unsigned int *buffer)
-      : resolution(resolution), shift(12 - resolution), buffer(buffer) {}
+      : resolution(resolution), buffer(buffer) {}
 
-  void write(const uint32_t x, const uint32_t y) const {
-    buffer[(y >> shift) * (1 << resolution) + (x >> shift)] = 0xFFFFFFFF;
-  }
+  uint32_t getMaxValue() const { return resolution - 1; }
+
+  void write(const uint32_t x, const uint32_t y) const { buffer[y * resolution + x] = 0xFFFFFFFF; }
 };

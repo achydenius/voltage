@@ -5,12 +5,17 @@
 
 namespace voltage {
 
-class SingleDACWriter {
+class DACWriter {
+ public:
+  virtual uint32_t getMaxValue() const = 0;
+};
+
+class SingleDACWriter : public DACWriter {
  public:
   virtual void write(uint32_t value) const = 0;
 };
 
-class DualDACWriter {
+class DualDACWriter : public DACWriter {
  public:
   virtual void write(uint32_t a, uint32_t b) const = 0;
 };

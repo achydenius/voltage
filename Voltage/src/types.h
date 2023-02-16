@@ -10,11 +10,6 @@ struct Pair {
   T a, b;
 };
 
-struct Point {
-  float x, y;
-  float brightness;
-};
-
 struct Line {
   Vector2 a, b;
   float brightness;

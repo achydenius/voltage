@@ -13,14 +13,9 @@ void Renderer::setBlankingPoint(const Vector2& blankingPoint) {
   this->blankingPoint = blankingPoint;
 }
 
-void Renderer::clear() {
-  lines.clear();
-  points.clear();
-}
+void Renderer::clear() { lines.clear(); }
 
 void Renderer::add(const Line& line) { lines.push(line); }
-
-void Renderer::add(const Point& point) { points.push(point); }
 
 void Renderer::add(Object* object, Camera& camera) {
   static Array<Object*> objects(1);
@@ -59,15 +54,6 @@ void Renderer::render() {
       clippedLines.push({a, b, lines[i].brightness});
     }
   }
-
-  clippedPoints.clear();
-  for (uint32_t i = 0; i < points.getSize(); i++) {
-    Point point = points[i];
-    if (point.x >= viewport.left && point.x < viewport.right && point.y >= viewport.bottom &&
-        point.y < viewport.top) {
-      clippedPoints.push(point);
-    }
-  }
   TIMER_STOP(viewportClip);
 
   TIMER_START(rasterize);
@@ -92,13 +78,6 @@ void Renderer::render() {
 
   if (brightnessWriter != nullptr) {
     brightnessWriter->write(brightnessTransform->transform(0));
-  }
-
-  for (uint32_t i = 0; i < clippedPoints.getSize(); i++) {
-    if (brightnessWriter != nullptr) {
-      brightnessWriter->write(brightnessTransform->transform(clippedPoints[i].brightness));
-    }
-    rasterizer.drawPoint({clippedPoints[i].x, clippedPoints[i].y});
   }
   TIMER_STOP(rasterize);
 

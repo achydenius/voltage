@@ -86,7 +86,7 @@ void Renderer::render() {
       brightnessWriter->write(brightnessTransform->transform(clippedLines[i].brightness));
     }
 
-    rasterizer.drawLine(clippedLines[i].a, clippedLines[i].b);
+    rasterizer.drawLine(clippedLines[i].a, clippedLines[i].b, increment);
     beamPosition = {clippedLines[i].b.x, clippedLines[i].b.y};
   }
 

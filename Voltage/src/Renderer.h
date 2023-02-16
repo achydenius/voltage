@@ -41,7 +41,8 @@ class Renderer {
   static const uint32_t defaultMaxPoints = 1000;
   static const uint32_t blankingDrawIncrement = 16;
   const float blankingBrightnessIncrement = 0.015;
-  ObjectPipeline pipeline;
+  const uint32_t increment;
+  const ObjectPipeline pipeline;
   const Rasterizer rasterizer;
   const SingleDACWriter* brightnessWriter;
   const BrightnessTransform* brightnessTransform;
@@ -61,10 +62,12 @@ class Renderer {
  public:
   float lightIntensity = 10;
 
-  Renderer(const DualDACWriter& lineWriter, SingleDACWriter* brightnessWriter = nullptr,
+  Renderer(const uint32_t increment, DualDACWriter& lineWriter,
+           SingleDACWriter* brightnessWriter = nullptr,
            BrightnessTransform* brightnessTransform = nullptr, uint32_t maxLines = defaultMaxLines,
            uint32_t maxPoints = defaultMaxPoints)
-      : pipeline(this, maxLines),
+      : increment(increment),
+        pipeline(this, maxLines),
         rasterizer(lineWriter),
         brightnessWriter(brightnessWriter),
         brightnessTransform(brightnessTransform),
@@ -74,10 +77,11 @@ class Renderer {
         clippedPoints(maxPoints) {}
 
 #ifndef VOLTAGE_EMULATOR
-  Renderer(SingleDACWriter* brightnessWriter = nullptr,
+  Renderer(const uint32_t increment = 1, SingleDACWriter* brightnessWriter = nullptr,
            BrightnessTransform* brightnessTransform = nullptr, uint32_t maxLines = defaultMaxLines,
            uint32_t maxPoints = defaultMaxPoints)
-      : Renderer(teensyLineWriter, brightnessWriter, brightnessTransform, maxLines, maxPoints) {}
+      : Renderer(increment, teensyLineWriter, brightnessWriter, brightnessTransform, maxLines,
+                 maxPoints) {}
 #endif
 
   void setViewport(const Viewport& viewport);

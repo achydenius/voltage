@@ -42,7 +42,7 @@ class Renderer {
   static const uint32_t blankingDrawIncrement = 16;
   const float blankingBrightnessIncrement = 0.015;
   const uint32_t increment;
-  const ObjectPipeline pipeline;
+  ObjectPipeline pipeline;
   const Rasterizer rasterizer;
   const SingleDACWriter* brightnessWriter;
   const BrightnessTransform* brightnessTransform;

@@ -9,7 +9,7 @@ DualDACWriter* writer = emulator.createWriter();
 
 // the rest of the code can be written like in Arduino IDE,
 // the writer just needs to be passed to the renderer
-Renderer renderer(*writer);
+Renderer renderer(1, *writer);
 Mesh* mesh = MeshBuilder::createCube(1.0);
 Object* object = new Object(mesh);
 FreeCamera camera;
